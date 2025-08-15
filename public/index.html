@@ -111,11 +111,11 @@
             <form id="loginForm" onsubmit="handleLogin(event)">
                 <div class="form-group">
                     <label for="loginUsername">用户名或邮箱</label>
-                    <input type="text" id="loginUsername" name="username" required>
+                    <input type="text" id="loginUsername" name="username" autocomplete="username" required>
                 </div>
                 <div class="form-group">
                     <label for="loginPassword">密码</label>
-                    <input type="password" id="loginPassword" name="password" required>
+                    <input type="password" id="loginPassword" name="password" autocomplete="current-password" required>
                 </div>
                 <button type="submit" class="btn btn-primary">登录</button>
             </form>
@@ -130,15 +130,15 @@
             <form id="registerForm" onsubmit="handleRegister(event)">
                 <div class="form-group">
                     <label for="registerUsername">用户名</label>
-                    <input type="text" id="registerUsername" name="username" required>
+                    <input type="text" id="registerUsername" name="username" autocomplete="username" required>
                 </div>
                 <div class="form-group">
                     <label for="registerEmail">邮箱</label>
-                    <input type="email" id="registerEmail" name="email" required>
+                    <input type="email" id="registerEmail" name="email" autocomplete="email" required>
                 </div>
                 <div class="form-group">
                     <label for="registerPassword">密码</label>
-                    <input type="password" id="registerPassword" name="password" required>
+                    <input type="password" id="registerPassword" name="password" autocomplete="new-password" required>
                 </div>
                 <button type="submit" class="btn btn-primary">注册</button>
             </form>
@@ -152,16 +152,16 @@
             <h2>上传视频</h2>
             <form id="uploadForm" onsubmit="handleUpload(event)">
                 <div class="form-group">
-                    <label for="videoTitle">视频标题</label>
-                    <input type="text" id="videoTitle" name="title" required>
+                    <label for="uploadVideoTitle">视频标题</label>
+                    <input type="text" id="uploadVideoTitle" name="title" autocomplete="off" required>
                 </div>
                 <div class="form-group">
-                    <label for="videoDescription">视频描述</label>
-                    <textarea id="videoDescription" name="description" rows="3"></textarea>
+                    <label for="uploadVideoDescription">视频描述</label>
+                    <textarea id="uploadVideoDescription" name="description" rows="3" autocomplete="off"></textarea>
                 </div>
                 <div class="form-group">
-                    <label for="videoFile">选择视频文件</label>
-                    <input type="file" id="videoFile" name="video" accept="video/*" required>
+                    <label for="uploadVideoFile">选择视频文件</label>
+                    <input type="file" id="uploadVideoFile" name="video" accept="video/*" required>
                 </div>
                 <button type="submit" class="btn btn-primary">上传视频</button>
             </form>
