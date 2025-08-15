@@ -63,7 +63,8 @@ module.exports = async (req, res) => {
         id: user.id,
         username: user.username,
         email: user.email,
-        is_admin: user.is_admin
+        is_admin: user.is_admin,
+        isAdmin: user.is_admin  // 添加兼容性字段
       },
       message: '登录成功'
     });

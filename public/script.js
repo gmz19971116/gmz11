@@ -71,11 +71,15 @@ function updateUIForLoggedInUser() {
     document.getElementById('userMenu').style.display = 'flex';
     document.getElementById('username').textContent = currentUser.username;
     
+    // 检查管理员权限（支持两种字段名）
+    const isAdmin = currentUser.is_admin || currentUser.isAdmin;
+    console.log('用户权限检查 - is_admin:', currentUser.is_admin, 'isAdmin:', currentUser.isAdmin, '最终结果:', isAdmin);
+    
     // 只有管理员才能看到上传按钮
     const adminMenu = document.getElementById('adminMenu');
     if (adminMenu) {
-        console.log('找到adminMenu元素，用户is_admin:', currentUser.is_admin);
-        if (currentUser.is_admin) {
+        console.log('找到adminMenu元素，用户isAdmin:', isAdmin);
+        if (isAdmin) {
             adminMenu.style.display = 'block';
             console.log('显示管理员菜单');
         } else {
@@ -152,7 +156,7 @@ function createVideoCard(video) {
     const uploadDate = formatDate(video.created_at);
     
     // 检查是否为管理员
-    const isAdmin = currentUser && currentUser.is_admin;
+    const isAdmin = currentUser && (currentUser.is_admin || currentUser.isAdmin);
     
     card.innerHTML = `
         <div class="video-thumbnail" onclick="playVideo(${video.id})">
@@ -313,6 +317,7 @@ async function handleLogin(e) {
         }
         
         const data = await response.json();
+        console.log('登录响应数据:', data);
         
         if (response.ok) {
             showMessage('登录成功', 'success');
@@ -321,6 +326,7 @@ async function handleLogin(e) {
             // 直接设置用户状态
             if (data.user) {
                 currentUser = data.user;
+                console.log('设置当前用户:', currentUser);
                 updateUIForLoggedInUser();
                 loadVideos(); // 加载视频列表
             }
@@ -397,7 +403,7 @@ async function logout() {
 // 显示上传模态框
 function showUploadModal() {
     // 检查是否为管理员
-    if (!currentUser || !currentUser.is_admin) {
+    if (!currentUser || !(currentUser.is_admin || currentUser.isAdmin)) {
         showMessage('只有管理员才能上传视频', 'error');
         return;
     }
@@ -500,7 +506,7 @@ async function handleUpload(e) {
 // 删除视频
 async function deleteVideo(videoId) {
     // 检查是否为管理员
-    if (!currentUser || !currentUser.is_admin) {
+    if (!currentUser || !(currentUser.is_admin || currentUser.isAdmin)) {
         showMessage('只有管理员才能删除视频', 'error');
         return;
     }
