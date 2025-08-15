@@ -31,6 +31,13 @@ function setupEventListeners() {
 // 检查认证状态
 async function checkAuthStatus() {
     try {
+        // 在Vercel环境中，直接检查是否有用户数据
+        if (currentUser) {
+            updateUIForLoggedInUser();
+            loadVideos();
+            return;
+        }
+        
         const response = await fetch('/api/auth/status', {
             method: 'GET',
             headers: {
@@ -43,6 +50,7 @@ async function checkAuthStatus() {
             if (data.authenticated && data.user) {
                 currentUser = data.user;
                 updateUIForLoggedInUser();
+                loadVideos();
             } else {
                 updateUIForLoggedOutUser();
             }
@@ -281,7 +289,13 @@ async function handleLogin(e) {
         if (response.ok) {
             showMessage('登录成功', 'success');
             closeModal('loginModal');
-            checkAuthStatus();
+            
+            // 直接设置用户状态
+            if (data.user) {
+                currentUser = data.user;
+                updateUIForLoggedInUser();
+                loadVideos(); // 加载视频列表
+            }
         } else {
             showMessage(data.error || '登录失败', 'error');
         }
