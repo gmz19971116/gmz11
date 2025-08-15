@@ -65,18 +65,25 @@ async function checkAuthStatus() {
 
 // 更新UI为已登录状态
 function updateUIForLoggedInUser() {
+    console.log('更新UI为已登录状态:', currentUser);
+    
     document.getElementById('authButtons').style.display = 'none';
     document.getElementById('userMenu').style.display = 'flex';
     document.getElementById('username').textContent = currentUser.username;
     
     // 只有管理员才能看到上传按钮
-    const uploadButton = document.getElementById('uploadButton');
-    if (uploadButton) {
+    const adminMenu = document.getElementById('adminMenu');
+    if (adminMenu) {
+        console.log('找到adminMenu元素，用户is_admin:', currentUser.is_admin);
         if (currentUser.is_admin) {
-            uploadButton.style.display = 'block';
+            adminMenu.style.display = 'block';
+            console.log('显示管理员菜单');
         } else {
-            uploadButton.style.display = 'none';
+            adminMenu.style.display = 'none';
+            console.log('隐藏管理员菜单');
         }
+    } else {
+        console.log('未找到adminMenu元素');
     }
 }
 
@@ -85,10 +92,10 @@ function updateUIForLoggedOutUser() {
     document.getElementById('authButtons').style.display = 'flex';
     document.getElementById('userMenu').style.display = 'none';
     
-    // 隐藏上传按钮
-    const uploadButton = document.getElementById('uploadButton');
-    if (uploadButton) {
-        uploadButton.style.display = 'none';
+    // 隐藏管理员菜单
+    const adminMenu = document.getElementById('adminMenu');
+    if (adminMenu) {
+        adminMenu.style.display = 'none';
     }
     
     currentUser = null;
