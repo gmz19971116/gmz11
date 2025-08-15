@@ -181,6 +181,28 @@ if (isVercel) {
     }
   });
 
+  // 退出登录API
+  app.post('/api/auth/logout', (req, res) => {
+    res.setHeader('Access-Control-Allow-Origin', '*');
+    res.setHeader('Access-Control-Allow-Methods', 'POST, OPTIONS');
+    res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
+    
+    if (req.method === 'OPTIONS') {
+      res.status(200).end();
+      return;
+    }
+    
+    try {
+      res.status(200).json({
+        success: true,
+        message: '退出登录成功'
+      });
+    } catch (error) {
+      console.error('退出登录错误:', error);
+      res.status(500).json({ error: '服务器内部错误' });
+    }
+  });
+
   // 视频列表API
   app.get('/api/videos', (req, res) => {
     res.setHeader('Access-Control-Allow-Origin', '*');

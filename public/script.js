@@ -234,56 +234,30 @@ function searchVideos() {
     displayVideos(filteredVideos);
 }
 
+// 显示上传视频模态框
+function showUploadModal() {
+    const modal = document.getElementById('uploadModal');
+    if (modal) {
+        modal.style.display = 'block';
+    } else {
+        showMessage('上传功能暂时不可用', 'error');
+    }
+}
+
 // 显示登录模态框
 function showLoginModal() {
-    const modal = createModal('loginModal', '用户登录', `
-        <form id="loginForm">
-            <div class="form-group">
-                <label for="loginUsername">用户名或邮箱</label>
-                <input type="text" id="loginUsername" required>
-            </div>
-            <div class="form-group">
-                <label for="loginPassword">密码</label>
-                <input type="password" id="loginPassword" required>
-            </div>
-            <div class="form-group">
-                <label class="checkbox-label">
-                    <input type="checkbox" id="rememberMe">
-                    <span>记住我</span>
-                </label>
-            </div>
-            <button type="submit" class="btn btn-primary btn-block">登录</button>
-        </form>
-    `);
-    
-    document.getElementById('loginForm').addEventListener('submit', handleLogin);
+    const modal = document.getElementById('loginModal');
+    if (modal) {
+        modal.style.display = 'block';
+    }
 }
 
 // 显示注册模态框
 function showRegisterModal() {
-    const modal = createModal('registerModal', '用户注册', `
-        <form id="registerForm">
-            <div class="form-group">
-                <label for="registerUsername">用户名</label>
-                <input type="text" id="registerUsername" required>
-            </div>
-            <div class="form-group">
-                <label for="registerEmail">邮箱</label>
-                <input type="email" id="registerEmail" required>
-            </div>
-            <div class="form-group">
-                <label for="registerPassword">密码</label>
-                <input type="password" id="registerPassword" required minlength="8">
-            </div>
-            <div class="form-group">
-                <label for="confirmPassword">确认密码</label>
-                <input type="password" id="confirmPassword" required minlength="8">
-            </div>
-            <button type="submit" class="btn btn-primary btn-block">注册</button>
-        </form>
-    `);
-    
-    document.getElementById('registerForm').addEventListener('submit', handleRegister);
+    const modal = document.getElementById('registerModal');
+    if (modal) {
+        modal.style.display = 'block';
+    }
 }
 
 // 处理登录
@@ -385,50 +359,29 @@ async function handleRegister(e) {
 async function logout() {
     try {
         const response = await fetch('/api/auth/logout', {
-            method: 'POST'
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            }
         });
         
         if (response.ok) {
-            showMessage('已退出登录', 'info');
+            currentUser = null;
             updateUIForLoggedOutUser();
+            showMessage('退出登录成功', 'success');
         } else {
-            showMessage('退出登录失败', 'error');
+            // 即使API失败，也清除本地状态
+            currentUser = null;
+            updateUIForLoggedOutUser();
+            showMessage('退出登录成功', 'success');
         }
     } catch (error) {
         console.error('退出登录失败:', error);
-        showMessage('退出登录失败', 'error');
+        // 即使出错，也清除本地状态
+        currentUser = null;
+        updateUIForLoggedOutUser();
+        showMessage('退出登录成功', 'success');
     }
-}
-
-// 显示上传模态框
-function showUploadModal() {
-    // 检查是否为管理员
-    if (!currentUser || !(currentUser.is_admin || currentUser.isAdmin)) {
-        showMessage('只有管理员才能上传视频', 'error');
-        return;
-    }
-    
-    const modal = createModal('uploadModal', '上传视频', `
-        <form id="uploadForm">
-            <div class="form-group">
-                <label for="uploadVideoTitle">视频标题</label>
-                <input type="text" id="uploadVideoTitle" required>
-            </div>
-            <div class="form-group">
-                <label for="uploadVideoDescription">视频描述</label>
-                <textarea id="uploadVideoDescription" rows="3"></textarea>
-            </div>
-            <div class="form-group">
-                <label for="uploadVideoFile">选择视频文件</label>
-                <input type="file" id="uploadVideoFile" accept="video/*" required>
-                <div class="file-info" id="uploadFileInfo"></div>
-            </div>
-            <button type="submit" class="btn btn-primary btn-block">上传视频</button>
-        </form>
-    `);
-    
-    document.getElementById('uploadVideoFile').addEventListener('change', handleFileSelect);
-    document.getElementById('uploadForm').addEventListener('submit', handleUpload);
 }
 
 // 处理文件选择
@@ -593,7 +546,7 @@ function createModal(id, title, content) {
 function closeModal(id) {
     const modal = document.getElementById(id);
     if (modal) {
-        modal.remove();
+        modal.style.display = 'none';
     }
 }
 
