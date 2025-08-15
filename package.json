@@ -1,7 +1,7 @@
 {
   "name": "video-platform",
   "version": "1.0.0",
-  "description": "简洁易用的网页端视频播放平台",
+  "description": "Simple web-based video playback platform",
   "main": "server.js",
   "scripts": {
     "start": "node server.js",
@@ -17,7 +17,14 @@
   "devDependencies": {
     "nodemon": "^3.0.1"
   },
-  "keywords": ["video", "platform", "streaming"],
-  "author": "Your Name",
-  "license": "MIT"
+  "engines": {
+    "node": ">=14.0.0"
+  },
+  "vercel": {
+    "functions": {
+      "server.js": {
+        "maxDuration": 30
+      }
+    }
+  }
 }
