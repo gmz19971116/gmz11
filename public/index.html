@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>视频播放平台</title>
-    <link rel="stylesheet" href="styles.css?v=1.1">
+    <link rel="stylesheet" href="/styles.css?v=1.2">
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
 </head>
 <body>
@@ -102,12 +102,76 @@
         </div>
     </main>
 
-    <!-- 模态框容器 -->
-    <div id="modalContainer"></div>
+    <!-- 模态框 -->
+    <!-- 登录模态框 -->
+    <div id="loginModal" class="modal">
+        <div class="modal-content">
+            <span class="close" onclick="closeModal('loginModal')">&times;</span>
+            <h2>用户登录</h2>
+            <form id="loginForm" onsubmit="handleLogin(event)">
+                <div class="form-group">
+                    <label for="loginUsername">用户名或邮箱</label>
+                    <input type="text" id="loginUsername" name="username" required>
+                </div>
+                <div class="form-group">
+                    <label for="loginPassword">密码</label>
+                    <input type="password" id="loginPassword" name="password" required>
+                </div>
+                <button type="submit" class="btn btn-primary">登录</button>
+            </form>
+        </div>
+    </div>
+
+    <!-- 注册模态框 -->
+    <div id="registerModal" class="modal">
+        <div class="modal-content">
+            <span class="close" onclick="closeModal('registerModal')">&times;</span>
+            <h2>用户注册</h2>
+            <form id="registerForm" onsubmit="handleRegister(event)">
+                <div class="form-group">
+                    <label for="registerUsername">用户名</label>
+                    <input type="text" id="registerUsername" name="username" required>
+                </div>
+                <div class="form-group">
+                    <label for="registerEmail">邮箱</label>
+                    <input type="email" id="registerEmail" name="email" required>
+                </div>
+                <div class="form-group">
+                    <label for="registerPassword">密码</label>
+                    <input type="password" id="registerPassword" name="password" required>
+                </div>
+                <button type="submit" class="btn btn-primary">注册</button>
+            </form>
+        </div>
+    </div>
+
+    <!-- 上传视频模态框 -->
+    <div id="uploadModal" class="modal">
+        <div class="modal-content">
+            <span class="close" onclick="closeModal('uploadModal')">&times;</span>
+            <h2>上传视频</h2>
+            <form id="uploadForm" onsubmit="handleUpload(event)">
+                <div class="form-group">
+                    <label for="videoTitle">视频标题</label>
+                    <input type="text" id="videoTitle" name="title" required>
+                </div>
+                <div class="form-group">
+                    <label for="videoDescription">视频描述</label>
+                    <textarea id="videoDescription" name="description" rows="3"></textarea>
+                </div>
+                <div class="form-group">
+                    <label for="videoFile">选择视频文件</label>
+                    <input type="file" id="videoFile" name="video" accept="video/*" required>
+                </div>
+                <button type="submit" class="btn btn-primary">上传视频</button>
+            </form>
+        </div>
+    </div>
 
     <!-- 消息提示 -->
-    <div id="message" class="message" style="display: none;"></div>
+    <div id="message" class="message"></div>
 
-    <script src="script.js"></script>
+    <!-- JavaScript -->
+    <script src="/script.js?v=1.2"></script>
 </body>
 </html>
