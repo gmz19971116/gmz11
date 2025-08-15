@@ -276,18 +276,28 @@ async function playVideo(videoId) {
             const videoSource = document.getElementById('videoSource');
             
             if (videoPlayer && videoSource) {
-                // 在Vercel环境中，始终使用在线示例视频
-                const sampleVideos = [
-                    'https://sample-videos.com/zip/10/mp4/SampleVideo_1280x720_1mb.mp4',
-                    'https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/BigBuckBunny.mp4',
-                    'https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ElephantsDream.mp4',
-                    'https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerBlazes.mp4'
-                ];
+                let videoSrc = '';
                 
-                // 根据视频ID选择不同的示例视频
-                const videoIndex = videoId % sampleVideos.length;
-                videoSource.src = sampleVideos[videoIndex];
+                // 优先使用videoUrl字段
+                if (data.video.videoUrl) {
+                    videoSrc = data.video.videoUrl;
+                    console.log('使用外部视频URL:', videoSrc);
+                } else {
+                    // 在Vercel环境中，使用在线示例视频
+                    const sampleVideos = [
+                        'https://sample-videos.com/zip/10/mp4/SampleVideo_1280x720_1mb.mp4',
+                        'https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/BigBuckBunny.mp4',
+                        'https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ElephantsDream.mp4',
+                        'https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerBlazes.mp4'
+                    ];
+                    
+                    // 根据视频ID选择不同的示例视频
+                    const videoIndex = videoId % sampleVideos.length;
+                    videoSrc = sampleVideos[videoIndex];
+                    console.log('使用示例视频:', videoSrc);
+                }
                 
+                videoSource.src = videoSrc;
                 videoPlayer.load();
                 console.log('视频源已设置:', videoSource.src);
                 
@@ -490,6 +500,7 @@ async function handleUpload(e) {
     
     const title = document.getElementById('uploadVideoTitle').value;
     const description = document.getElementById('uploadVideoDescription').value;
+    const videoUrl = document.getElementById('uploadVideoUrl').value;
     const file = document.getElementById('uploadVideoFile').files[0];
     
     if (!title) {
@@ -497,20 +508,32 @@ async function handleUpload(e) {
         return;
     }
     
-    if (!file) {
-        showMessage('请选择视频文件', 'error');
-        return;
-    }
-    
-    // 检查文件大小（限制为10MB）
-    const maxSize = 10 * 1024 * 1024; // 10MB
-    if (file.size > maxSize) {
-        showMessage(`视频文件大小不能超过10MB（当前: ${(file.size / 1024 / 1024).toFixed(1)}MB）`, 'error');
+    // 检查是否有视频URL或文件
+    if (!videoUrl && !file) {
+        showMessage('请输入视频URL或选择视频文件', 'error');
         return;
     }
     
     try {
-        // 在Vercel环境中，只上传视频元数据
+        let videoSource = '';
+        
+        if (videoUrl) {
+            // 使用外部视频URL
+            videoSource = videoUrl;
+        } else if (file) {
+            // 检查文件大小（限制为10MB）
+            const maxSize = 10 * 1024 * 1024; // 10MB
+            if (file.size > maxSize) {
+                showMessage(`视频文件大小不能超过10MB（当前: ${(file.size / 1024 / 1024).toFixed(1)}MB）`, 'error');
+                return;
+            }
+            
+            // 提示用户上传到外部服务
+            showMessage('请先将视频上传到外部服务（如YouTube、Vimeo等），然后输入视频URL', 'info');
+            return;
+        }
+        
+        // 上传视频元数据
         const response = await fetch('/api/videos', {
             method: 'POST',
             headers: {
@@ -519,8 +542,9 @@ async function handleUpload(e) {
             body: JSON.stringify({
                 title: title,
                 description: description,
-                filename: file.name,
-                fileSize: file.size
+                videoUrl: videoSource,
+                filename: file ? file.name : 'external-video',
+                fileSize: file ? file.size : 0
             })
         });
         

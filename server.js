@@ -285,7 +285,7 @@ if (isVercel) {
       return;
     }
     
-    const { title, description, filename, fileSize } = req.body;
+    const { title, description, videoUrl, filename, fileSize } = req.body;
     
     if (!title) {
       return res.status(400).json({ error: '视频标题不能为空' });
@@ -295,11 +295,12 @@ if (isVercel) {
       id: Date.now(),
       title: title,
       description: description || '',
-      filename: 'sample-video.mp4',
-      filepath: 'uploads/sample-video.mp4',
+      filename: filename || 'video.mp4',
+      filepath: videoUrl || 'uploads/sample-video.mp4', // 使用videoUrl作为filepath
+      videoUrl: videoUrl, // 存储原始视频URL
       thumbnail_path: null,
       duration: 0,
-      file_size: 0,
+      file_size: fileSize || 0,
       uploaded_by: 1755168092284,
       uploader_name: "admin",
       created_at: new Date().toISOString(),
