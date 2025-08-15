@@ -186,7 +186,7 @@ function createVideoCard(video) {
     const isAdmin = currentUser && (currentUser.is_admin || currentUser.isAdmin);
     
     card.innerHTML = `
-        <div class="video-thumbnail" onclick="playVideo(${video.id})">
+        <div class="video-thumbnail">
             ${video.thumbnail_path ? 
                 `<img src="/${video.thumbnail_path}" alt="${video.title}" onerror="this.style.display='none'">` : 
                 '<i class="fas fa-play-circle" style="font-size: 3rem;"></i>'
@@ -209,7 +209,29 @@ function createVideoCard(video) {
         </div>
     `;
     
+    // 添加点击事件监听器
+    card.addEventListener('click', function(e) {
+        // 如果点击的是删除按钮，不触发播放
+        if (e.target.closest('.video-actions')) {
+            return;
+        }
+        console.log('视频卡片被点击，播放视频:', video.id);
+        playVideo(video.id);
+    });
+    
     return card;
+}
+
+// 测试播放视频
+function testPlayVideo() {
+    console.log('测试播放视频功能');
+    if (videos && videos.length > 0) {
+        console.log('播放第一个视频:', videos[0].id);
+        playVideo(videos[0].id);
+    } else {
+        console.log('没有视频可播放');
+        showMessage('没有视频可播放', 'error');
+    }
 }
 
 // 播放视频
