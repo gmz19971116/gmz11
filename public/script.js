@@ -69,8 +69,14 @@ function updateUIForLoggedInUser() {
     document.getElementById('userMenu').style.display = 'flex';
     document.getElementById('username').textContent = currentUser.username;
     
-    if (currentUser.isAdmin) {
-        document.getElementById('adminMenu').style.display = 'block';
+    // 只有管理员才能看到上传按钮
+    const uploadButton = document.getElementById('uploadButton');
+    if (uploadButton) {
+        if (currentUser.is_admin) {
+            uploadButton.style.display = 'block';
+        } else {
+            uploadButton.style.display = 'none';
+        }
     }
 }
 
@@ -78,7 +84,13 @@ function updateUIForLoggedInUser() {
 function updateUIForLoggedOutUser() {
     document.getElementById('authButtons').style.display = 'flex';
     document.getElementById('userMenu').style.display = 'none';
-    document.getElementById('adminMenu').style.display = 'none';
+    
+    // 隐藏上传按钮
+    const uploadButton = document.getElementById('uploadButton');
+    if (uploadButton) {
+        uploadButton.style.display = 'none';
+    }
+    
     currentUser = null;
 }
 
@@ -128,13 +140,15 @@ function displayVideos(videoList) {
 function createVideoCard(video) {
     const card = document.createElement('div');
     card.className = 'video-card';
-    card.onclick = () => playVideo(video.id);
     
     const duration = formatDuration(video.duration);
     const uploadDate = formatDate(video.created_at);
     
+    // 检查是否为管理员
+    const isAdmin = currentUser && currentUser.is_admin;
+    
     card.innerHTML = `
-        <div class="video-thumbnail">
+        <div class="video-thumbnail" onclick="playVideo(${video.id})">
             ${video.thumbnail_path ? 
                 `<img src="/${video.thumbnail_path}" alt="${video.title}" onerror="this.style.display='none'">` : 
                 '<i class="fas fa-play-circle" style="font-size: 3rem;"></i>'
@@ -147,6 +161,13 @@ function createVideoCard(video) {
                 <span>${duration}</span>
                 <span>${uploadDate}</span>
             </div>
+            ${isAdmin ? `
+                <div class="video-actions">
+                    <button class="btn btn-danger btn-sm" onclick="event.stopPropagation(); deleteVideo(${video.id})">
+                        <i class="fas fa-trash"></i> 删除
+                    </button>
+                </div>
+            ` : ''}
         </div>
     `;
     
@@ -368,6 +389,12 @@ async function logout() {
 
 // 显示上传模态框
 function showUploadModal() {
+    // 检查是否为管理员
+    if (!currentUser || !currentUser.is_admin) {
+        showMessage('只有管理员才能上传视频', 'error');
+        return;
+    }
+    
     const modal = createModal('uploadModal', '上传视频', `
         <form id="uploadForm">
             <div class="form-group">
@@ -408,7 +435,6 @@ function handleFileSelect(e) {
 async function handleUpload(e) {
     e.preventDefault();
     
-    const formData = new FormData();
     const title = document.getElementById('uploadVideoTitle').value;
     const description = document.getElementById('uploadVideoDescription').value;
     const file = document.getElementById('uploadVideoFile').files[0];
@@ -418,6 +444,19 @@ async function handleUpload(e) {
         return;
     }
     
+    // 检查文件大小（限制为100MB）
+    if (file.size > 100 * 1024 * 1024) {
+        showMessage('视频文件大小不能超过100MB', 'error');
+        return;
+    }
+    
+    // 检查文件类型
+    if (!file.type.startsWith('video/')) {
+        showMessage('请选择有效的视频文件', 'error');
+        return;
+    }
+    
+    const formData = new FormData();
     formData.append('title', title);
     formData.append('description', description);
     formData.append('video', file);
@@ -427,6 +466,14 @@ async function handleUpload(e) {
             method: 'POST',
             body: formData
         });
+        
+        // 检查响应类型
+        const contentType = response.headers.get('content-type');
+        if (!contentType || !contentType.includes('application/json')) {
+            console.error('服务器返回非JSON响应:', await response.text());
+            showMessage('服务器不支持文件上传，请使用本地版本', 'error');
+            return;
+        }
         
         const data = await response.json();
         
@@ -440,6 +487,39 @@ async function handleUpload(e) {
     } catch (error) {
         console.error('视频上传失败:', error);
         showMessage('视频上传失败，请稍后重试', 'error');
+    }
+}
+
+// 删除视频
+async function deleteVideo(videoId) {
+    // 检查是否为管理员
+    if (!currentUser || !currentUser.is_admin) {
+        showMessage('只有管理员才能删除视频', 'error');
+        return;
+    }
+    
+    if (!confirm('确定要删除这个视频吗？')) {
+        return;
+    }
+    
+    try {
+        const response = await fetch(`/api/videos/${videoId}`, {
+            method: 'DELETE',
+            headers: {
+                'Content-Type': 'application/json'
+            }
+        });
+        
+        if (response.ok) {
+            showMessage('视频删除成功', 'success');
+            loadVideos();
+        } else {
+            const data = await response.json();
+            showMessage(data.error || '删除失败', 'error');
+        }
+    } catch (error) {
+        console.error('删除视频失败:', error);
+        showMessage('删除失败，请稍后重试', 'error');
     }
 }
 
