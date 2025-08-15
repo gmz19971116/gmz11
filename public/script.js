@@ -120,11 +120,28 @@ function showPage(pageName) {
 // 加载视频列表
 async function loadVideos() {
     try {
+        console.log('开始加载视频列表...');
         const response = await fetch('/api/videos');
-        const data = await response.json();
         
-        videos = data.videos;
-        displayVideos(videos);
+        // 检查响应类型
+        const contentType = response.headers.get('content-type');
+        if (!contentType || !contentType.includes('application/json')) {
+            console.error('服务器返回非JSON响应:', await response.text());
+            showMessage('加载视频列表失败', 'error');
+            return;
+        }
+        
+        const data = await response.json();
+        console.log('视频列表数据:', data);
+        
+        if (response.ok && data.success) {
+            videos = data.videos || [];
+            console.log('设置视频列表:', videos);
+            displayVideos(videos);
+        } else {
+            console.error('加载视频列表失败:', data.error);
+            showMessage(data.error || '加载视频列表失败', 'error');
+        }
     } catch (error) {
         console.error('加载视频列表失败:', error);
         showMessage('加载视频列表失败', 'error');
@@ -133,11 +150,19 @@ async function loadVideos() {
 
 // 显示视频列表
 function displayVideos(videoList) {
+    console.log('显示视频列表:', videoList);
     const videosGrid = document.getElementById('videosGrid');
+    
+    if (!videosGrid) {
+        console.error('未找到videosGrid元素');
+        return;
+    }
+    
     videosGrid.innerHTML = '';
     
-    if (videoList.length === 0) {
+    if (!videoList || videoList.length === 0) {
         videosGrid.innerHTML = '<p class="no-videos">暂无视频</p>';
+        console.log('没有视频可显示');
         return;
     }
     
@@ -145,6 +170,8 @@ function displayVideos(videoList) {
         const videoCard = createVideoCard(video);
         videosGrid.appendChild(videoCard);
     });
+    
+    console.log(`显示了 ${videoList.length} 个视频`);
 }
 
 // 创建视频卡片
@@ -187,45 +214,65 @@ function createVideoCard(video) {
 
 // 播放视频
 async function playVideo(videoId) {
+    console.log('尝试播放视频:', videoId);
+    
     try {
         const response = await fetch(`/api/videos/${videoId}`);
+        console.log('视频详情响应状态:', response.status);
         
         // 检查响应类型
         const contentType = response.headers.get('content-type');
         if (!contentType || !contentType.includes('application/json')) {
-            console.error('服务器返回非JSON响应:', await response.text());
+            const responseText = await response.text();
+            console.error('服务器返回非JSON响应:', responseText);
             showMessage('服务器配置错误，请稍后重试', 'error');
             return;
         }
         
         const data = await response.json();
+        console.log('视频详情数据:', data);
         
         if (response.ok && data.success) {
+            console.log('切换到播放页面');
             showPage('player');
             
-            document.getElementById('videoTitle').textContent = data.video.title;
-            document.getElementById('videoDescription').textContent = data.video.description || '暂无描述';
-            document.getElementById('videoUploader').textContent = `上传者: ${data.video.uploader_name || '未知用户'}`;
-            document.getElementById('videoDuration').textContent = `时长: ${formatDuration(data.video.duration)}`;
-            document.getElementById('videoDate').textContent = `上传时间: ${formatDate(data.video.created_at)}`;
+            // 更新视频信息
+            const videoTitle = document.getElementById('videoTitle');
+            const videoDescription = document.getElementById('videoDescription');
+            const videoUploader = document.getElementById('videoUploader');
+            const videoDuration = document.getElementById('videoDuration');
+            const videoDate = document.getElementById('videoDate');
             
+            if (videoTitle) videoTitle.textContent = data.video.title;
+            if (videoDescription) videoDescription.textContent = data.video.description || '暂无描述';
+            if (videoUploader) videoUploader.textContent = `上传者: ${data.video.uploader_name || '未知用户'}`;
+            if (videoDuration) videoDuration.textContent = `时长: ${formatDuration(data.video.duration)}`;
+            if (videoDate) videoDate.textContent = `上传时间: ${formatDate(data.video.created_at)}`;
+            
+            // 设置视频源
             const videoPlayer = document.getElementById('videoPlayer');
             const videoSource = document.getElementById('videoSource');
             
-            // 在Vercel环境中，使用示例视频URL
-            if (data.video.filepath && !data.video.filepath.includes('sample')) {
-                videoSource.src = `/${data.video.filepath}`;
+            if (videoPlayer && videoSource) {
+                // 在Vercel环境中，使用示例视频URL
+                if (data.video.filepath && !data.video.filepath.includes('sample')) {
+                    videoSource.src = `/${data.video.filepath}`;
+                } else {
+                    // 使用示例视频
+                    videoSource.src = 'https://sample-videos.com/zip/10/mp4/SampleVideo_1280x720_1mb.mp4';
+                }
+                
+                videoPlayer.load();
+                console.log('视频源已设置:', videoSource.src);
+                
+                if (data.playHistory && data.playHistory.last_position > 0) {
+                    videoPlayer.currentTime = data.playHistory.last_position;
+                }
             } else {
-                // 使用示例视频
-                videoSource.src = 'https://sample-videos.com/zip/10/mp4/SampleVideo_1280x720_1mb.mp4';
-            }
-            
-            videoPlayer.load();
-            
-            if (data.playHistory && data.playHistory.last_position > 0) {
-                videoPlayer.currentTime = data.playHistory.last_position;
+                console.error('未找到视频播放器元素');
             }
         } else {
+            console.error('获取视频信息失败:', data.error);
             showMessage(data.error || '获取视频信息失败', 'error');
         }
     } catch (error) {
@@ -283,7 +330,6 @@ async function handleLogin(e) {
     
     const username = document.getElementById('loginUsername').value;
     const password = document.getElementById('loginPassword').value;
-    const rememberMe = document.getElementById('rememberMe').checked;
     
     try {
         const response = await fetch('/api/auth/login', {
@@ -293,8 +339,7 @@ async function handleLogin(e) {
             },
             body: JSON.stringify({
                 username: username,
-                password: password,
-                rememberMe: rememberMe
+                password: password
             }),
             credentials: 'include'
         });
@@ -337,12 +382,6 @@ async function handleRegister(e) {
     const username = document.getElementById('registerUsername').value;
     const email = document.getElementById('registerEmail').value;
     const password = document.getElementById('registerPassword').value;
-    const confirmPassword = document.getElementById('confirmPassword').value;
-    
-    if (password !== confirmPassword) {
-        showMessage('两次输入的密码不一致', 'error');
-        return;
-    }
     
     try {
         const response = await fetch('/api/auth/register', {

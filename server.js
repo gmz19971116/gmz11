@@ -199,6 +199,64 @@ if (isVercel) {
     }
   });
 
+  // 用户注册API
+  app.post('/api/auth/register', async (req, res) => {
+    res.setHeader('Access-Control-Allow-Origin', '*');
+    res.setHeader('Access-Control-Allow-Methods', 'POST, OPTIONS');
+    res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
+    
+    if (req.method === 'OPTIONS') {
+      res.status(200).end();
+      return;
+    }
+    
+    try {
+      const { username, email, password } = req.body;
+      
+      if (!username || !email || !password) {
+        return res.status(400).json({ error: '用户名、邮箱和密码不能为空' });
+      }
+      
+      // 检查用户是否已存在
+      const existingUser = memoryDB.users.find(u => 
+        u.username === username || u.email === email
+      );
+      
+      if (existingUser) {
+        return res.status(400).json({ error: '用户名或邮箱已存在' });
+      }
+      
+      // 创建新用户
+      const hashedPassword = await bcrypt.hash(password, 10);
+      const newUser = {
+        id: Date.now(),
+        username: username,
+        email: email,
+        password: hashedPassword,
+        is_admin: false,
+        created_at: new Date().toISOString(),
+        updated_at: new Date().toISOString()
+      };
+      
+      memoryDB.users.push(newUser);
+      
+      res.status(201).json({
+        success: true,
+        message: '注册成功',
+        user: {
+          id: newUser.id,
+          username: newUser.username,
+          email: newUser.email,
+          is_admin: newUser.is_admin
+        }
+      });
+      
+    } catch (error) {
+      console.error('注册错误:', error);
+      res.status(500).json({ error: '服务器内部错误' });
+    }
+  });
+
   // 视频列表API
   app.get('/api/videos', (req, res) => {
     res.setHeader('Access-Control-Allow-Origin', '*');
