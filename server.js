@@ -352,12 +352,24 @@ if (isVercel) {
     }
     
     const videoId = req.params.id;
-    const video = memoryDB.videos.find(v => v.id == videoId);
+    console.log('查找视频ID:', videoId, '类型:', typeof videoId);
+    console.log('当前内存数据库中的视频:', memoryDB.videos.map(v => ({ id: v.id, title: v.title, idType: typeof v.id })));
+    
+    // 尝试多种匹配方式
+    let video = memoryDB.videos.find(v => v.id == videoId); // 宽松匹配
+    if (!video) {
+      video = memoryDB.videos.find(v => v.id === parseInt(videoId)); // 数字匹配
+    }
+    if (!video) {
+      video = memoryDB.videos.find(v => v.id === videoId); // 严格匹配
+    }
     
     if (!video) {
+      console.log('未找到视频，返回404');
       return res.status(404).json({ error: '视频不存在' });
     }
     
+    console.log('找到视频:', video.title);
     res.status(200).json({
       success: true,
       video: video
