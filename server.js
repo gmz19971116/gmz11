@@ -13,37 +13,46 @@ const { initDatabase } = require('./database/db'); // 导入数据库初始化�
 const app = express(); // 创建Express应用实例
 const PORT = process.env.PORT || 3000; // 设置服务器端口
 
-// 创建必要的目录
-const uploadsDir = path.join(__dirname, 'uploads'); // 定义上传目录路径
-const thumbnailsDir = path.join(__dirname, 'uploads', 'thumbnails'); // 定义缩略图目录路径
+// 检查是否在Vercel环境
+const isVercel = process.env.VERCEL === '1';
 
-// 确保上传目录存在
-if (!fs.existsSync(uploadsDir)) {
-    fs.mkdirSync(uploadsDir, { recursive: true }); // 递归创建上传目录
-}
+// 创建必要的目录（仅在非Vercel环境）
+if (!isVercel) {
+    const uploadsDir = path.join(__dirname, 'uploads');
+    const thumbnailsDir = path.join(__dirname, 'uploads', 'thumbnails');
 
-// 确保缩略图目录存在
-if (!fs.existsSync(thumbnailsDir)) {
-    fs.mkdirSync(thumbnailsDir, { recursive: true }); // 递归创建缩略图目录
+    if (!fs.existsSync(uploadsDir)) {
+        fs.mkdirSync(uploadsDir, { recursive: true });
+    }
+
+    if (!fs.existsSync(thumbnailsDir)) {
+        fs.mkdirSync(thumbnailsDir, { recursive: true });
+    }
 }
 
 // 中间件配置
-app.use(cors()); // 启用CORS跨域支持
+app.use(cors({
+    origin: process.env.VERCEL_URL ? `https://${process.env.VERCEL_URL}` : 'http://localhost:3000',
+    credentials: true
+}));
 app.use(express.json()); // 解析JSON请求体
 app.use(express.urlencoded({ extended: true })); // 解析URL编码请求体
 
 // 静态文件服务
-app.use('/uploads', express.static(path.join(__dirname, 'uploads'))); // 提供上传文件的静态访问
+if (!isVercel) {
+    app.use('/uploads', express.static(path.join(__dirname, 'uploads'))); // 提供上传文件的静态访问
+}
 app.use(express.static(path.join(__dirname, 'public'))); // 提供前端静态文件访问
 
-// 会话配置（使用内存存储）
+// 会话配置
 app.use(session({
     secret: 'your-secret-key-change-in-production', // 会话密钥（生产环境应更改）
     resave: false, // 不强制保存会话
     saveUninitialized: false, // 不保存未初始化的会话
     cookie: {
-        secure: false, // 开发环境不使用HTTPS
-        maxAge: 24 * 60 * 60 * 1000 // 会话有效期24小时
+        secure: isVercel, // Vercel环境使用HTTPS
+        maxAge: 24 * 60 * 60 * 1000, // 会话有效期24小时
+        sameSite: isVercel ? 'none' : 'lax'
     }
 }));
 
@@ -66,19 +75,24 @@ app.use((err, req, res, next) => {
     }); // 返回错误响应
 });
 
-// 启动服务器
-async function startServer() {
-    try {
-        await initDatabase(); // 初始化数据库
-        console.log('数据库初始化完成'); // 输出数据库初始化成功信息
-        
-        app.listen(PORT, () => {
-            console.log(`服务器运行在 http://localhost:${PORT}`); // 输出服务器启动信息
-        });
-    } catch (error) {
-        console.error('服务器启动失败:', error); // 输出服务器启动失败信息
-        process.exit(1); // 退出进程
+// 启动服务器（仅在非Vercel环境）
+if (!isVercel) {
+    async function startServer() {
+        try {
+            await initDatabase(); // 初始化数据库
+            console.log('数据库初始化完成'); // 输出数据库初始化成功信息
+            
+            app.listen(PORT, () => {
+                console.log(`服务器运行在 http://localhost:${PORT}`); // 输出服务器启动信息
+            });
+        } catch (error) {
+            console.error('服务器启动失败:', error); // 输出服务器启动失败信息
+            process.exit(1); // 退出进程
+        }
     }
+
+    startServer();
 }
 
-startServer(); // 启动服务器
+// 导出app（用于Vercel）
+module.exports = app;
