@@ -61,6 +61,25 @@ app.use('/api/auth', authRoutes); // 认证相关路由
 app.use('/api/videos', videoRoutes); // 视频相关路由
 app.use('/api/users', userRoutes); // 用户相关路由
 
+// 处理静态文件请求
+app.get('*.js', (req, res) => {
+    const filePath = path.join(__dirname, 'public', req.path);
+    if (fs.existsSync(filePath)) {
+        res.sendFile(filePath);
+    } else {
+        res.status(404).send('File not found');
+    }
+});
+
+app.get('*.css', (req, res) => {
+    const filePath = path.join(__dirname, 'public', req.path);
+    if (fs.existsSync(filePath)) {
+        res.sendFile(filePath);
+    } else {
+        res.status(404).send('File not found');
+    }
+});
+
 // 默认路由 - 返回前端页面
 app.get('*', (req, res) => {
     res.sendFile(path.join(__dirname, 'public', 'index.html')); // 返回前端主页面
