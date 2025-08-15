@@ -47,7 +47,7 @@ module.exports = async (req, res) => {
     });
     
   } else if (req.method === 'DELETE') {
-    // 删除视频
+    // 删除视频（简化版本，不验证会话）
     const videoIndex = memoryDB.videos.findIndex(v => v.id == videoId);
     
     if (videoIndex === -1) {

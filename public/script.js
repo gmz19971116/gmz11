@@ -516,6 +516,7 @@ async function deleteVideo(videoId) {
     }
     
     try {
+        console.log('尝试删除视频:', videoId);
         const response = await fetch(`/api/videos/${videoId}`, {
             method: 'DELETE',
             headers: {
@@ -523,11 +524,16 @@ async function deleteVideo(videoId) {
             }
         });
         
+        console.log('删除响应状态:', response.status);
+        
         if (response.ok) {
+            const data = await response.json();
+            console.log('删除成功:', data);
             showMessage('视频删除成功', 'success');
-            loadVideos();
+            loadVideos(); // 重新加载视频列表
         } else {
             const data = await response.json();
+            console.log('删除失败:', data);
             showMessage(data.error || '删除失败', 'error');
         }
     } catch (error) {
