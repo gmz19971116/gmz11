@@ -1,0 +1,113 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>视频播放平台</title>
+    <link rel="stylesheet" href="styles.css">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+</head>
+<body>
+    <!-- 导航栏 -->
+    <nav class="navbar">
+        <div class="nav-container">
+            <div class="nav-logo">
+                <i class="fas fa-play-circle"></i>
+                <span>视频平台</span>
+            </div>
+            
+            <div class="nav-menu">
+                <a href="#" class="nav-link" data-page="home">首页</a>
+                <a href="#" class="nav-link" data-page="videos">视频列表</a>
+                <div class="auth-buttons" id="authButtons">
+                    <button class="btn btn-primary" onclick="showLoginModal()">登录</button>
+                    <button class="btn btn-secondary" onclick="showRegisterModal()">注册</button>
+                </div>
+                <div class="user-menu" id="userMenu" style="display: none;">
+                    <span class="username" id="username"></span>
+                    <div class="dropdown">
+                        <button class="btn btn-primary dropdown-toggle">
+                            <i class="fas fa-user"></i>
+                        </button>
+                        <div class="dropdown-menu">
+                            <a href="#" class="dropdown-item" onclick="showProfileModal()">
+                                <i class="fas fa-user-edit"></i> 个人资料
+                            </a>
+                            <a href="#" class="dropdown-item" onclick="showHistoryModal()">
+                                <i class="fas fa-history"></i> 播放历史
+                            </a>
+                            <a href="#" class="dropdown-item" onclick="logout()">
+                                <i class="fas fa-sign-out-alt"></i> 退出登录
+                            </a>
+                        </div>
+                    </div>
+                </div>
+                <div class="admin-menu" id="adminMenu" style="display: none;">
+                    <button class="btn btn-warning" onclick="showUploadModal()">
+                        <i class="fas fa-upload"></i> 上传视频
+                    </button>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <!-- 主要内容区域 -->
+    <main class="main-content">
+        <!-- 首页 -->
+        <div id="homePage" class="page active">
+            <div class="hero-section">
+                <h1>欢迎来到视频播放平台</h1>
+                <p>简洁易用的在线视频观看体验</p>
+                <button class="btn btn-primary btn-large" onclick="showVideos()">
+                    <i class="fas fa-play"></i> 开始观看
+                </button>
+            </div>
+        </div>
+
+        <!-- 视频列表页 -->
+        <div id="videosPage" class="page">
+            <div class="page-header">
+                <h2>视频列表</h2>
+                <div class="search-box">
+                    <input type="text" id="searchInput" placeholder="搜索视频..." class="search-input">
+                    <button class="search-btn" onclick="searchVideos()">
+                        <i class="fas fa-search"></i>
+                    </button>
+                </div>
+            </div>
+            <div class="videos-grid" id="videosGrid">
+                <!-- 视频卡片将在这里动态生成 -->
+            </div>
+        </div>
+
+        <!-- 视频播放页 -->
+        <div id="playerPage" class="page">
+            <div class="player-container">
+                <div class="video-player">
+                    <video id="videoPlayer" controls>
+                        <source id="videoSource" src="" type="video/mp4">
+                        您的浏览器不支持视频播放。
+                    </video>
+                </div>
+                <div class="video-info">
+                    <h3 id="videoTitle"></h3>
+                    <p id="videoDescription"></p>
+                    <div class="video-meta">
+                        <span id="videoUploader"></span>
+                        <span id="videoDuration"></span>
+                        <span id="videoDate"></span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <!-- 模态框容器 -->
+    <div id="modalContainer"></div>
+
+    <!-- 消息提示 -->
+    <div id="message" class="message" style="display: none;"></div>
+
+    <script src="script.js"></script>
+</body>
+</html>
