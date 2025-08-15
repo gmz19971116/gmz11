@@ -2,8 +2,190 @@
 let currentUser = null;
 let videos = [];
 
+// JSONBin.io配置
+const JSONBIN_CONFIG = {
+  BIN_ID: '65f8b8c8dc74654018b12345', // 这个ID需要替换为你的实际bin ID
+  API_KEY: '$2a$10$your-api-key-here', // 这个需要替换为你的实际API key
+  BASE_URL: 'https://api.jsonbin.io/v3/b'
+};
+
+// 从云数据库加载数据
+async function loadFromCloudDatabase() {
+  try {
+    console.log('从云数据库加载数据...');
+    const response = await fetch(`${JSONBIN_CONFIG.BASE_URL}/${JSONBIN_CONFIG.BIN_ID}`, {
+      headers: {
+        'X-Master-Key': JSONBIN_CONFIG.API_KEY
+      }
+    });
+    
+    if (response.ok) {
+      const data = await response.json();
+      if (data.record && data.record.videos) {
+        videos = data.record.videos;
+        console.log('从云数据库加载视频:', videos.length, '个');
+      }
+      if (data.record && data.record.users) {
+        // 可以加载用户数据
+        console.log('从云数据库加载用户数据');
+      }
+    } else {
+      console.log('云数据库加载失败，使用本地存储');
+      loadFromLocalStorage();
+    }
+  } catch (error) {
+    console.error('云数据库加载失败:', error);
+    loadFromLocalStorage();
+  }
+}
+
+// 保存数据到云数据库
+async function saveToCloudDatabase() {
+  try {
+    const dataToSave = {
+      videos: videos,
+      users: [currentUser].filter(Boolean),
+      lastUpdated: new Date().toISOString()
+    };
+    
+    const response = await fetch(`${JSONBIN_CONFIG.BASE_URL}/${JSONBIN_CONFIG.BIN_ID}`, {
+      method: 'PUT',
+      headers: {
+        'Content-Type': 'application/json',
+        'X-Master-Key': JSONBIN_CONFIG.API_KEY
+      },
+      body: JSON.stringify(dataToSave)
+    });
+    
+    if (response.ok) {
+      console.log('数据已保存到云数据库');
+    } else {
+      console.error('云数据库保存失败');
+      saveToLocalStorage(); // 降级到本地存储
+    }
+  } catch (error) {
+    console.error('云数据库保存失败:', error);
+    saveToLocalStorage(); // 降级到本地存储
+  }
+}
+
+// 本地存储键名（作为备用）
+const STORAGE_KEYS = {
+  VIDEOS: 'video_platform_videos',
+  USER: 'video_platform_user'
+};
+
+// 从本地存储加载数据（备用方案）
+function loadFromLocalStorage() {
+  try {
+    const storedVideos = localStorage.getItem(STORAGE_KEYS.VIDEOS);
+    if (storedVideos) {
+      videos = JSON.parse(storedVideos);
+      console.log('从本地存储加载视频:', videos.length, '个');
+    }
+    
+    const storedUser = localStorage.getItem(STORAGE_KEYS.USER);
+    if (storedUser) {
+      currentUser = JSON.parse(storedUser);
+      console.log('从本地存储加载用户:', currentUser.username);
+    }
+  } catch (error) {
+    console.error('加载本地存储失败:', error);
+  }
+}
+
+// 保存数据到本地存储（备用方案）
+function saveToLocalStorage() {
+  try {
+    localStorage.setItem(STORAGE_KEYS.VIDEOS, JSON.stringify(videos));
+    if (currentUser) {
+      localStorage.setItem(STORAGE_KEYS.USER, JSON.stringify(currentUser));
+    }
+  } catch (error) {
+    console.error('保存到本地存储失败:', error);
+  }
+}
+
+// 显示设置模态框
+function showSettingsModal() {
+    const modal = document.getElementById('settingsModal');
+    if (modal) {
+        modal.style.display = 'block';
+    }
+}
+
+// 保存设置
+function saveSettings() {
+    const binId = document.getElementById('jsonbinBinId').value;
+    const apiKey = document.getElementById('jsonbinApiKey').value;
+    
+    if (!binId || !apiKey) {
+        showMessage('请填写完整的设置信息', 'error');
+        return;
+    }
+    
+    // 更新配置
+    JSONBIN_CONFIG.BIN_ID = binId;
+    JSONBIN_CONFIG.API_KEY = apiKey;
+    
+    // 保存到本地存储
+    localStorage.setItem('jsonbin_config', JSON.stringify(JSONBIN_CONFIG));
+    
+    showMessage('设置已保存', 'success');
+    closeModal('settingsModal');
+}
+
+// 测试连接
+async function testConnection() {
+    const binId = document.getElementById('jsonbinBinId').value;
+    const apiKey = document.getElementById('jsonbinApiKey').value;
+    
+    if (!binId || !apiKey) {
+        showMessage('请填写完整的设置信息', 'error');
+        return;
+    }
+    
+    try {
+        const response = await fetch(`https://api.jsonbin.io/v3/b/${binId}`, {
+            headers: {
+                'X-Master-Key': apiKey
+            }
+        });
+        
+        if (response.ok) {
+            showMessage('连接测试成功！', 'success');
+        } else {
+            showMessage('连接测试失败，请检查设置', 'error');
+        }
+    } catch (error) {
+        showMessage('连接测试失败：' + error.message, 'error');
+    }
+}
+
+// 加载设置
+function loadSettings() {
+    try {
+        const savedConfig = localStorage.getItem('jsonbin_config');
+        if (savedConfig) {
+            const config = JSON.parse(savedConfig);
+            JSONBIN_CONFIG.BIN_ID = config.BIN_ID || JSONBIN_CONFIG.BIN_ID;
+            JSONBIN_CONFIG.API_KEY = config.API_KEY || JSONBIN_CONFIG.API_KEY;
+            
+            // 更新设置页面的值
+            const binIdInput = document.getElementById('jsonbinBinId');
+            const apiKeyInput = document.getElementById('jsonbinApiKey');
+            if (binIdInput) binIdInput.value = JSONBIN_CONFIG.BIN_ID;
+            if (apiKeyInput) apiKeyInput.value = JSONBIN_CONFIG.API_KEY;
+        }
+    } catch (error) {
+        console.error('加载设置失败:', error);
+    }
+}
+
 // 页面加载完成后初始化
 document.addEventListener('DOMContentLoaded', function() {
+    loadSettings(); // 加载设置
+    loadFromCloudDatabase(); // 优先从云数据库加载
     checkAuthStatus();
     loadVideos();
     setupEventListeners();
@@ -121,26 +303,43 @@ function showPage(pageName) {
 async function loadVideos() {
     try {
         console.log('开始加载视频列表...');
-        const response = await fetch('/api/videos');
         
-        // 检查响应类型
-        const contentType = response.headers.get('content-type');
-        if (!contentType || !contentType.includes('application/json')) {
-            console.error('服务器返回非JSON响应:', await response.text());
-            showMessage('加载视频列表失败', 'error');
+        // 如果本地已有数据，直接使用
+        if (videos && videos.length > 0) {
+            console.log('使用本地视频数据:', videos.length, '个视频');
+            displayVideos(videos);
             return;
         }
         
-        const data = await response.json();
-        console.log('视频列表数据:', data);
+        // 否则尝试从云数据库加载
+        await loadFromCloudDatabase();
         
-        if (response.ok && data.success) {
-            videos = data.videos || [];
-            console.log('设置视频列表:', videos);
-            displayVideos(videos);
+        // 如果云数据库也没有数据，尝试从服务器加载
+        if (!videos || videos.length === 0) {
+            const response = await fetch('/api/videos');
+            
+            // 检查响应类型
+            const contentType = response.headers.get('content-type');
+            if (!contentType || !contentType.includes('application/json')) {
+                console.error('服务器返回非JSON响应:', await response.text());
+                showMessage('加载视频列表失败', 'error');
+                return;
+            }
+            
+            const data = await response.json();
+            console.log('视频列表数据:', data);
+            
+            if (response.ok && data.success) {
+                videos = data.videos || [];
+                console.log('设置视频列表:', videos);
+                await saveToCloudDatabase(); // 保存到云数据库
+                displayVideos(videos);
+            } else {
+                console.error('加载视频列表失败:', data.error);
+                showMessage(data.error || '加载视频列表失败', 'error');
+            }
         } else {
-            console.error('加载视频列表失败:', data.error);
-            showMessage(data.error || '加载视频列表失败', 'error');
+            displayVideos(videos);
         }
     } catch (error) {
         console.error('加载视频列表失败:', error);
@@ -239,83 +438,70 @@ async function playVideo(videoId) {
     console.log('尝试播放视频:', videoId);
     
     try {
-        const response = await fetch(`/api/videos/${videoId}`);
-        console.log('视频详情响应状态:', response.status);
+        // 从本地视频列表中查找视频
+        const video = videos.find(v => v.id == videoId);
         
-        // 检查响应类型
-        const contentType = response.headers.get('content-type');
-        if (!contentType || !contentType.includes('application/json')) {
-            const responseText = await response.text();
-            console.error('服务器返回非JSON响应:', responseText);
-            showMessage('服务器配置错误，请稍后重试', 'error');
+        if (!video) {
+            console.error('未找到视频:', videoId);
+            showMessage('视频不存在', 'error');
             return;
         }
         
-        const data = await response.json();
-        console.log('视频详情数据:', data);
+        console.log('找到视频:', video.title);
+        console.log('切换到播放页面');
+        showPage('player');
         
-        if (response.ok && data.success) {
-            console.log('切换到播放页面');
-            showPage('player');
+        // 更新视频信息
+        const videoTitle = document.getElementById('videoTitle');
+        const videoDescription = document.getElementById('videoDescription');
+        const videoUploader = document.getElementById('videoUploader');
+        const videoDuration = document.getElementById('videoDuration');
+        const videoDate = document.getElementById('videoDate');
+        
+        if (videoTitle) videoTitle.textContent = video.title;
+        if (videoDescription) videoDescription.textContent = video.description || '暂无描述';
+        if (videoUploader) videoUploader.textContent = `上传者: ${video.uploader_name || '未知用户'}`;
+        if (videoDuration) videoDuration.textContent = `时长: ${formatDuration(video.duration)}`;
+        if (videoDate) videoDate.textContent = `上传时间: ${formatDate(video.created_at)}`;
+        
+        // 设置视频源
+        const videoPlayer = document.getElementById('videoPlayer');
+        const videoSource = document.getElementById('videoSource');
+        
+        if (videoPlayer && videoSource) {
+            let videoSrc = '';
             
-            // 更新视频信息
-            const videoTitle = document.getElementById('videoTitle');
-            const videoDescription = document.getElementById('videoDescription');
-            const videoUploader = document.getElementById('videoUploader');
-            const videoDuration = document.getElementById('videoDuration');
-            const videoDate = document.getElementById('videoDate');
-            
-            if (videoTitle) videoTitle.textContent = data.video.title;
-            if (videoDescription) videoDescription.textContent = data.video.description || '暂无描述';
-            if (videoUploader) videoUploader.textContent = `上传者: ${data.video.uploader_name || '未知用户'}`;
-            if (videoDuration) videoDuration.textContent = `时长: ${formatDuration(data.video.duration)}`;
-            if (videoDate) videoDate.textContent = `上传时间: ${formatDate(data.video.created_at)}`;
-            
-            // 设置视频源
-            const videoPlayer = document.getElementById('videoPlayer');
-            const videoSource = document.getElementById('videoSource');
-            
-            if (videoPlayer && videoSource) {
-                let videoSrc = '';
-                
-                // 优先使用videoUrl字段
-                if (data.video.videoUrl) {
-                    videoSrc = data.video.videoUrl;
-                    console.log('使用外部视频URL:', videoSrc);
-                } else {
-                    // 在Vercel环境中，使用在线示例视频
-                    const sampleVideos = [
-                        'https://sample-videos.com/zip/10/mp4/SampleVideo_1280x720_1mb.mp4',
-                        'https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/BigBuckBunny.mp4',
-                        'https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ElephantsDream.mp4',
-                        'https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerBlazes.mp4'
-                    ];
-                    
-                    // 根据视频ID选择不同的示例视频
-                    const videoIndex = videoId % sampleVideos.length;
-                    videoSrc = sampleVideos[videoIndex];
-                    console.log('使用示例视频:', videoSrc);
-                }
-                
-                videoSource.src = videoSrc;
-                videoPlayer.load();
-                console.log('视频源已设置:', videoSource.src);
-                
-                // 尝试自动播放
-                videoPlayer.play().catch(error => {
-                    console.log('自动播放失败，需要用户手动点击播放:', error);
-                });
-                
-                if (data.playHistory && data.playHistory.last_position > 0) {
-                    videoPlayer.currentTime = data.playHistory.last_position;
-                }
+            // 优先使用videoUrl字段
+            if (video.videoUrl) {
+                videoSrc = video.videoUrl;
+                console.log('使用外部视频URL:', videoSrc);
             } else {
-                console.error('未找到视频播放器元素');
+                // 使用示例视频
+                const sampleVideos = [
+                    'https://sample-videos.com/zip/10/mp4/SampleVideo_1280x720_1mb.mp4',
+                    'https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/BigBuckBunny.mp4',
+                    'https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ElephantsDream.mp4',
+                    'https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerBlazes.mp4'
+                ];
+                
+                // 根据视频ID选择不同的示例视频
+                const videoIndex = videoId % sampleVideos.length;
+                videoSrc = sampleVideos[videoIndex];
+                console.log('使用示例视频:', videoSrc);
             }
+            
+            videoSource.src = videoSrc;
+            videoPlayer.load();
+            console.log('视频源已设置:', videoSource.src);
+            
+            // 尝试自动播放
+            videoPlayer.play().catch(error => {
+                console.log('自动播放失败，需要用户手动点击播放:', error);
+            });
         } else {
-            console.error('获取视频信息失败:', data.error);
-            showMessage(data.error || '获取视频信息失败', 'error');
+            console.error('未找到视频播放器元素');
         }
+        
     } catch (error) {
         console.error('播放视频失败:', error);
         showMessage('播放视频失败，请稍后重试', 'error');
@@ -533,38 +719,39 @@ async function handleUpload(e) {
             return;
         }
         
-        // 上传视频元数据
-        const response = await fetch('/api/videos', {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json'
-            },
-            body: JSON.stringify({
-                title: title,
-                description: description,
-                videoUrl: videoSource,
-                filename: file ? file.name : 'external-video',
-                fileSize: file ? file.size : 0
-            })
-        });
+        // 创建新视频对象
+        const newVideo = {
+            id: Date.now(),
+            title: title,
+            description: description || '',
+            filename: file ? file.name : 'external-video',
+            filepath: videoSource,
+            videoUrl: videoSource,
+            thumbnail_path: null,
+            duration: 0,
+            file_size: file ? file.size : 0,
+            uploaded_by: currentUser ? currentUser.id : 1755168092284,
+            uploader_name: currentUser ? currentUser.username : "admin",
+            created_at: new Date().toISOString(),
+            updated_at: new Date().toISOString()
+        };
         
-        if (response.ok) {
-            const data = await response.json();
-            showMessage('视频上传成功', 'success');
-            closeModal('uploadModal');
-            
-            // 清空表单
-            document.getElementById('uploadForm').reset();
-            
-            // 重新加载视频列表
-            loadVideos();
-        } else {
-            const data = await response.json();
-            showMessage(data.error || '上传失败', 'error');
-        }
+        // 添加到本地视频列表
+        videos.push(newVideo);
+        await saveToCloudDatabase(); // 保存到云数据库
+        
+        showMessage('视频上传成功', 'success');
+        closeModal('uploadModal');
+        
+        // 清空表单
+        document.getElementById('uploadForm').reset();
+        
+        // 重新显示视频列表
+        displayVideos(videos);
+        
     } catch (error) {
         console.error('上传失败:', error);
-        showMessage('上传功能暂时不可用，请稍后重试', 'error');
+        showMessage('上传失败，请稍后重试', 'error');
     }
 }
 

@@ -46,6 +46,9 @@
                     <button class="btn btn-warning" onclick="showUploadModal()">
                         <i class="fas fa-upload"></i> 上传视频
                     </button>
+                    <button class="btn btn-info" onclick="showSettingsModal()" style="margin-left: 10px;">
+                        <i class="fas fa-cog"></i> 设置
+                    </button>
                 </div>
             </div>
         </div>
@@ -174,6 +177,38 @@
                 </div>
                 <button type="submit" class="btn btn-primary">上传视频</button>
             </form>
+        </div>
+    </div>
+
+    <!-- 设置模态框 -->
+    <div id="settingsModal" class="modal" style="display: none;">
+        <div class="modal-content">
+            <span class="close" onclick="closeModal('settingsModal')">&times;</span>
+            <h2>云数据库设置</h2>
+            <div class="form-group">
+                <label for="jsonbinBinId">JSONBin.io Bin ID</label>
+                <input type="text" id="jsonbinBinId" placeholder="65f8b8c8dc74654018b12345" value="65f8b8c8dc74654018b12345">
+                <small>在 <a href="https://jsonbin.io" target="_blank">JSONBin.io</a> 创建的bin ID</small>
+            </div>
+            <div class="form-group">
+                <label for="jsonbinApiKey">API Key</label>
+                <input type="password" id="jsonbinApiKey" placeholder="$2a$10$your-api-key-here" value="$2a$10$your-api-key-here">
+                <small>JSONBin.io的Master Key</small>
+            </div>
+            <div class="form-group">
+                <button class="btn btn-primary" onclick="saveSettings()">保存设置</button>
+                <button class="btn btn-secondary" onclick="testConnection()">测试连接</button>
+            </div>
+            <div class="form-group">
+                <h3>设置说明：</h3>
+                <ol>
+                    <li>访问 <a href="https://jsonbin.io" target="_blank">JSONBin.io</a></li>
+                    <li>注册免费账户</li>
+                    <li>创建一个新的bin</li>
+                    <li>复制bin ID和API key</li>
+                    <li>填入上面的设置</li>
+                </ol>
+            </div>
         </div>
     </div>
 
