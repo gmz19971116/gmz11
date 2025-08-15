@@ -276,16 +276,25 @@ async function playVideo(videoId) {
             const videoSource = document.getElementById('videoSource');
             
             if (videoPlayer && videoSource) {
-                // 在Vercel环境中，使用示例视频URL
-                if (data.video.filepath && !data.video.filepath.includes('sample')) {
-                    videoSource.src = `/${data.video.filepath}`;
-                } else {
-                    // 使用示例视频
-                    videoSource.src = 'https://sample-videos.com/zip/10/mp4/SampleVideo_1280x720_1mb.mp4';
-                }
+                // 在Vercel环境中，始终使用在线示例视频
+                const sampleVideos = [
+                    'https://sample-videos.com/zip/10/mp4/SampleVideo_1280x720_1mb.mp4',
+                    'https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/BigBuckBunny.mp4',
+                    'https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ElephantsDream.mp4',
+                    'https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerBlazes.mp4'
+                ];
+                
+                // 根据视频ID选择不同的示例视频
+                const videoIndex = videoId % sampleVideos.length;
+                videoSource.src = sampleVideos[videoIndex];
                 
                 videoPlayer.load();
                 console.log('视频源已设置:', videoSource.src);
+                
+                // 尝试自动播放
+                videoPlayer.play().catch(error => {
+                    console.log('自动播放失败，需要用户手动点击播放:', error);
+                });
                 
                 if (data.playHistory && data.playHistory.last_position > 0) {
                     videoPlayer.currentTime = data.playHistory.last_position;
@@ -483,26 +492,25 @@ async function handleUpload(e) {
     const description = document.getElementById('uploadVideoDescription').value;
     const file = document.getElementById('uploadVideoFile').files[0];
     
+    if (!title) {
+        showMessage('请输入视频标题', 'error');
+        return;
+    }
+    
     if (!file) {
         showMessage('请选择视频文件', 'error');
         return;
     }
     
-    // 检查文件大小（限制为10MB，适应Vercel限制）
+    // 检查文件大小（限制为10MB）
     const maxSize = 10 * 1024 * 1024; // 10MB
     if (file.size > maxSize) {
         showMessage(`视频文件大小不能超过10MB（当前: ${(file.size / 1024 / 1024).toFixed(1)}MB）`, 'error');
         return;
     }
     
-    // 检查文件类型
-    if (!file.type.startsWith('video/')) {
-        showMessage('请选择有效的视频文件', 'error');
-        return;
-    }
-    
-    // 使用简化的上传方式（不上传实际文件）
     try {
+        // 在Vercel环境中，只上传视频元数据
         const response = await fetch('/api/videos', {
             method: 'POST',
             headers: {
@@ -516,26 +524,23 @@ async function handleUpload(e) {
             })
         });
         
-        // 检查响应类型
-        const contentType = response.headers.get('content-type');
-        if (!contentType || !contentType.includes('application/json')) {
-            console.error('服务器返回非JSON响应:', await response.text());
-            showMessage('上传功能暂时不可用，请稍后重试', 'error');
-            return;
-        }
-        
-        const data = await response.json();
-        
         if (response.ok) {
+            const data = await response.json();
             showMessage('视频上传成功', 'success');
             closeModal('uploadModal');
+            
+            // 清空表单
+            document.getElementById('uploadForm').reset();
+            
+            // 重新加载视频列表
             loadVideos();
         } else {
-            showMessage(data.error || '视频上传失败', 'error');
+            const data = await response.json();
+            showMessage(data.error || '上传失败', 'error');
         }
     } catch (error) {
-        console.error('视频上传失败:', error);
-        showMessage('视频上传失败，请稍后重试', 'error');
+        console.error('上传失败:', error);
+        showMessage('上传功能暂时不可用，请稍后重试', 'error');
     }
 }
 
