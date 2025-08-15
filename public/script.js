@@ -457,9 +457,10 @@ async function handleUpload(e) {
         return;
     }
     
-    // 检查文件大小（限制为100MB）
-    if (file.size > 100 * 1024 * 1024) {
-        showMessage('视频文件大小不能超过100MB', 'error');
+    // 检查文件大小（限制为10MB，适应Vercel限制）
+    const maxSize = 10 * 1024 * 1024; // 10MB
+    if (file.size > maxSize) {
+        showMessage(`视频文件大小不能超过10MB（当前: ${(file.size / 1024 / 1024).toFixed(1)}MB）`, 'error');
         return;
     }
     
@@ -469,22 +470,26 @@ async function handleUpload(e) {
         return;
     }
     
-    const formData = new FormData();
-    formData.append('title', title);
-    formData.append('description', description);
-    formData.append('video', file);
-    
+    // 使用简化的上传方式（不上传实际文件）
     try {
-        const response = await fetch('/api/videos/upload', {
+        const response = await fetch('/api/videos', {
             method: 'POST',
-            body: formData
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({
+                title: title,
+                description: description,
+                filename: file.name,
+                fileSize: file.size
+            })
         });
         
         // 检查响应类型
         const contentType = response.headers.get('content-type');
         if (!contentType || !contentType.includes('application/json')) {
             console.error('服务器返回非JSON响应:', await response.text());
-            showMessage('服务器不支持文件上传，请使用本地版本', 'error');
+            showMessage('上传功能暂时不可用，请稍后重试', 'error');
             return;
         }
         
