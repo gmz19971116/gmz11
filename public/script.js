@@ -28,20 +28,30 @@ function setupEventListeners() {
     });
 }
 
-// 检查登录状态
+// 检查认证状态
 async function checkAuthStatus() {
     try {
-        const response = await fetch('/api/auth/check');
-        const data = await response.json();
+        const response = await fetch('/api/auth/status', {
+            method: 'GET',
+            headers: {
+                'Content-Type': 'application/json'
+            }
+        });
         
-        if (data.isLoggedIn) {
-            currentUser = data.user;
-            updateUIForLoggedInUser();
+        if (response.ok) {
+            const data = await response.json();
+            if (data.authenticated && data.user) {
+                currentUser = data.user;
+                updateUIForLoggedInUser();
+            } else {
+                updateUIForLoggedOutUser();
+            }
         } else {
             updateUIForLoggedOutUser();
         }
     } catch (error) {
-        console.error('检查登录状态失败:', error);
+        console.error('检查认证状态失败:', error);
+        updateUIForLoggedOutUser();
     }
 }
 
@@ -254,8 +264,17 @@ async function handleLogin(e) {
                 username: username,
                 password: password,
                 rememberMe: rememberMe
-            })
+            }),
+            credentials: 'include'
         });
+        
+        // 检查响应类型
+        const contentType = response.headers.get('content-type');
+        if (!contentType || !contentType.includes('application/json')) {
+            console.error('服务器返回非JSON响应:', await response.text());
+            showMessage('服务器配置错误，请稍后重试', 'error');
+            return;
+        }
         
         const data = await response.json();
         
