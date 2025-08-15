@@ -4,13 +4,36 @@ let videos = [];
 
 // JSONBin.io配置
 const JSONBIN_CONFIG = {
-  BIN_ID: '65f8b8c8dc74654018b12345', // 这个ID需要替换为你的实际bin ID
-  API_KEY: '$2a$10$your-api-key-here', // 这个需要替换为你的实际API key
+  BIN_ID: '', // 需要用户自己设置
+  API_KEY: '', // 需要用户自己设置
   BASE_URL: 'https://api.jsonbin.io/v3/b'
 };
 
 // 从云数据库加载数据
 async function loadFromCloudDatabase() {
+  // 检查配置是否完整
+  if (!JSONBIN_CONFIG.BIN_ID || !JSONBIN_CONFIG.API_KEY) {
+    console.log('JSONBin.io未配置，使用默认数据');
+    videos = [
+      {
+        id: 1755169872969,
+        title: "示例视频",
+        description: "这是一个示例视频，请配置JSONBin.io来保存你的视频",
+        filename: "sample-video.mp4",
+        filepath: "https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/BigBuckBunny.mp4",
+        videoUrl: "https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/BigBuckBunny.mp4",
+        thumbnail_path: null,
+        duration: 0,
+        file_size: 0,
+        uploaded_by: 1755168092284,
+        uploader_name: "admin",
+        created_at: "2025-08-14T11:11:12.969Z",
+        updated_at: "2025-08-14T11:11:12.969Z"
+      }
+    ];
+    return;
+  }
+
   try {
     console.log('从云数据库加载数据...');
     const response = await fetch(`${JSONBIN_CONFIG.BASE_URL}/${JSONBIN_CONFIG.BIN_ID}`, {
@@ -27,12 +50,11 @@ async function loadFromCloudDatabase() {
       }
     } else {
       console.log('云数据库加载失败，使用默认数据');
-      // 使用默认的示例视频
       videos = [
         {
           id: 1755169872969,
           title: "示例视频",
-          description: "这是一个示例视频",
+          description: "这是一个示例视频，请配置JSONBin.io来保存你的视频",
           filename: "sample-video.mp4",
           filepath: "https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/BigBuckBunny.mp4",
           videoUrl: "https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/BigBuckBunny.mp4",
@@ -48,12 +70,11 @@ async function loadFromCloudDatabase() {
     }
   } catch (error) {
     console.error('云数据库加载失败:', error);
-    // 使用默认的示例视频
     videos = [
       {
         id: 1755169872969,
         title: "示例视频",
-        description: "这是一个示例视频",
+        description: "这是一个示例视频，请配置JSONBin.io来保存你的视频",
         filename: "sample-video.mp4",
         filepath: "https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/BigBuckBunny.mp4",
         videoUrl: "https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/BigBuckBunny.mp4",
@@ -71,6 +92,12 @@ async function loadFromCloudDatabase() {
 
 // 保存数据到云数据库
 async function saveToCloudDatabase() {
+  // 检查配置是否完整
+  if (!JSONBIN_CONFIG.BIN_ID || !JSONBIN_CONFIG.API_KEY) {
+    console.log('JSONBin.io未配置，无法保存到云数据库');
+    return false;
+  }
+
   try {
     const dataToSave = {
       videos: videos,
@@ -207,7 +234,6 @@ function setupEventListeners() {
 // 检查认证状态
 async function checkAuthStatus() {
     try {
-        // 在Vercel环境中，直接检查是否有用户数据
         if (currentUser) {
             updateUIForLoggedInUser();
             loadVideos();
@@ -247,11 +273,9 @@ function updateUIForLoggedInUser() {
     document.getElementById('userMenu').style.display = 'flex';
     document.getElementById('username').textContent = currentUser.username;
     
-    // 检查管理员权限（支持两种字段名）
     const isAdmin = currentUser.is_admin || currentUser.isAdmin;
     console.log('用户权限检查 - is_admin:', currentUser.is_admin, 'isAdmin:', currentUser.isAdmin, '最终结果:', isAdmin);
     
-    // 只有管理员才能看到上传按钮
     const adminMenu = document.getElementById('adminMenu');
     if (adminMenu) {
         console.log('找到adminMenu元素，用户isAdmin:', isAdmin);
@@ -272,7 +296,6 @@ function updateUIForLoggedOutUser() {
     document.getElementById('authButtons').style.display = 'flex';
     document.getElementById('userMenu').style.display = 'none';
     
-    // 隐藏管理员菜单
     const adminMenu = document.getElementById('adminMenu');
     if (adminMenu) {
         adminMenu.style.display = 'none';
@@ -298,14 +321,12 @@ async function loadVideos() {
     try {
         console.log('开始加载视频列表...');
         
-        // 如果本地已有数据，直接使用
         if (videos && videos.length > 0) {
             console.log('使用本地视频数据:', videos.length, '个视频');
             displayVideos(videos);
             return;
         }
         
-        // 从云数据库加载
         await loadFromCloudDatabase();
         displayVideos(videos);
         
@@ -349,7 +370,6 @@ function createVideoCard(video) {
     const duration = formatDuration(video.duration);
     const uploadDate = formatDate(video.created_at);
     
-    // 检查是否为管理员
     const isAdmin = currentUser && (currentUser.is_admin || currentUser.isAdmin);
     
     card.innerHTML = `
@@ -376,9 +396,7 @@ function createVideoCard(video) {
         </div>
     `;
     
-    // 添加点击事件监听器
     card.addEventListener('click', function(e) {
-        // 如果点击的是删除按钮，不触发播放
         if (e.target.closest('.video-actions')) {
             return;
         }
@@ -389,24 +407,11 @@ function createVideoCard(video) {
     return card;
 }
 
-// 测试播放视频
-function testPlayVideo() {
-    console.log('测试播放视频功能');
-    if (videos && videos.length > 0) {
-        console.log('播放第一个视频:', videos[0].id);
-        playVideo(videos[0].id);
-    } else {
-        console.log('没有视频可播放');
-        showMessage('没有视频可播放', 'error');
-    }
-}
-
 // 播放视频
 async function playVideo(videoId) {
     console.log('尝试播放视频:', videoId);
     
     try {
-        // 从本地视频列表中查找视频
         const video = videos.find(v => v.id == videoId);
         
         if (!video) {
@@ -419,7 +424,6 @@ async function playVideo(videoId) {
         console.log('切换到播放页面');
         showPage('player');
         
-        // 更新视频信息
         const videoTitle = document.getElementById('videoTitle');
         const videoDescription = document.getElementById('videoDescription');
         const videoUploader = document.getElementById('videoUploader');
@@ -432,19 +436,16 @@ async function playVideo(videoId) {
         if (videoDuration) videoDuration.textContent = `时长: ${formatDuration(video.duration)}`;
         if (videoDate) videoDate.textContent = `上传时间: ${formatDate(video.created_at)}`;
         
-        // 设置视频源
         const videoPlayer = document.getElementById('videoPlayer');
         const videoSource = document.getElementById('videoSource');
         
         if (videoPlayer && videoSource) {
             let videoSrc = '';
             
-            // 优先使用videoUrl字段
             if (video.videoUrl) {
                 videoSrc = video.videoUrl;
                 console.log('使用外部视频URL:', videoSrc);
             } else {
-                // 使用示例视频
                 const sampleVideos = [
                     'https://sample-videos.com/zip/10/mp4/SampleVideo_1280x720_1mb.mp4',
                     'https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/BigBuckBunny.mp4',
@@ -452,7 +453,6 @@ async function playVideo(videoId) {
                     'https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerBlazes.mp4'
                 ];
                 
-                // 根据视频ID选择不同的示例视频
                 const videoIndex = videoId % sampleVideos.length;
                 videoSrc = sampleVideos[videoIndex];
                 console.log('使用示例视频:', videoSrc);
@@ -462,7 +462,6 @@ async function playVideo(videoId) {
             videoPlayer.load();
             console.log('视频源已设置:', videoSource.src);
             
-            // 尝试自动播放
             videoPlayer.play().catch(error => {
                 console.log('自动播放失败，需要用户手动点击播放:', error);
             });
@@ -738,26 +737,21 @@ async function deleteVideo(videoId) {
     }
     
     try {
-        console.log('尝试删除视频:', videoId);
-        const response = await fetch(`/api/videos/${videoId}`, {
-            method: 'DELETE',
-            headers: {
-                'Content-Type': 'application/json'
-            }
-        });
+        // 从本地列表中删除
+        videos = videos.filter(v => v.id != videoId);
         
-        console.log('删除响应状态:', response.status);
+        // 保存到云数据库
+        const saveSuccess = await saveToCloudDatabase();
         
-        if (response.ok) {
-            const data = await response.json();
-            console.log('删除成功:', data);
+        if (saveSuccess) {
             showMessage('视频删除成功', 'success');
-            loadVideos(); // 重新加载视频列表
         } else {
-            const data = await response.json();
-            console.log('删除失败:', data);
-            showMessage(data.error || '删除失败', 'error');
+            showMessage('视频已删除，但保存到云数据库失败', 'warning');
         }
+        
+        // 重新显示视频列表
+        displayVideos(videos);
+        
     } catch (error) {
         console.error('删除视频失败:', error);
         showMessage('删除失败，请稍后重试', 'error');
@@ -851,3 +845,4 @@ function formatDate(dateString) {
 function showVideos() {
     showPage('videos');
 }
+
