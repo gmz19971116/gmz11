@@ -166,14 +166,10 @@ if (isVercel) {
     }
     
     try {
+      // 在Vercel环境中，不自动登录，需要用户手动登录
       res.status(200).json({
-        authenticated: true,
-        user: {
-          id: memoryDB.users[0].id,
-          username: memoryDB.users[0].username,
-          email: memoryDB.users[0].email,
-          is_admin: memoryDB.users[0].is_admin
-        }
+        authenticated: false,
+        user: null
       });
     } catch (error) {
       console.error('状态检查错误:', error);
@@ -282,6 +278,30 @@ if (isVercel) {
     res.status(200).json({
       success: true,
       message: '视频删除成功'
+    });
+  });
+
+  // 获取单个视频详情API
+  app.get('/api/videos/:id', (req, res) => {
+    res.setHeader('Access-Control-Allow-Origin', '*');
+    res.setHeader('Access-Control-Allow-Methods', 'GET, OPTIONS');
+    res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
+    
+    if (req.method === 'OPTIONS') {
+      res.status(200).end();
+      return;
+    }
+    
+    const videoId = req.params.id;
+    const video = memoryDB.videos.find(v => v.id == videoId);
+    
+    if (!video) {
+      return res.status(404).json({ error: '视频不存在' });
+    }
+    
+    res.status(200).json({
+      success: true,
+      video: video
     });
   });
 } else {

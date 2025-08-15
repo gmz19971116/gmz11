@@ -189,9 +189,18 @@ function createVideoCard(video) {
 async function playVideo(videoId) {
     try {
         const response = await fetch(`/api/videos/${videoId}`);
+        
+        // 检查响应类型
+        const contentType = response.headers.get('content-type');
+        if (!contentType || !contentType.includes('application/json')) {
+            console.error('服务器返回非JSON响应:', await response.text());
+            showMessage('服务器配置错误，请稍后重试', 'error');
+            return;
+        }
+        
         const data = await response.json();
         
-        if (response.ok) {
+        if (response.ok && data.success) {
             showPage('player');
             
             document.getElementById('videoTitle').textContent = data.video.title;
@@ -202,7 +211,15 @@ async function playVideo(videoId) {
             
             const videoPlayer = document.getElementById('videoPlayer');
             const videoSource = document.getElementById('videoSource');
-            videoSource.src = `/${data.video.filepath}`;
+            
+            // 在Vercel环境中，使用示例视频URL
+            if (data.video.filepath && !data.video.filepath.includes('sample')) {
+                videoSource.src = `/${data.video.filepath}`;
+            } else {
+                // 使用示例视频
+                videoSource.src = 'https://sample-videos.com/zip/10/mp4/SampleVideo_1280x720_1mb.mp4';
+            }
+            
             videoPlayer.load();
             
             if (data.playHistory && data.playHistory.last_position > 0) {
@@ -213,7 +230,7 @@ async function playVideo(videoId) {
         }
     } catch (error) {
         console.error('播放视频失败:', error);
-        showMessage('播放视频失败', 'error');
+        showMessage('播放视频失败，请稍后重试', 'error');
     }
 }
 
