@@ -25,17 +25,47 @@ async function loadFromCloudDatabase() {
         videos = data.record.videos;
         console.log('从云数据库加载视频:', videos.length, '个');
       }
-      if (data.record && data.record.users) {
-        // 可以加载用户数据
-        console.log('从云数据库加载用户数据');
-      }
     } else {
-      console.log('云数据库加载失败，使用本地存储');
-      loadFromLocalStorage();
+      console.log('云数据库加载失败，使用默认数据');
+      // 使用默认的示例视频
+      videos = [
+        {
+          id: 1755169872969,
+          title: "示例视频",
+          description: "这是一个示例视频",
+          filename: "sample-video.mp4",
+          filepath: "https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/BigBuckBunny.mp4",
+          videoUrl: "https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/BigBuckBunny.mp4",
+          thumbnail_path: null,
+          duration: 0,
+          file_size: 0,
+          uploaded_by: 1755168092284,
+          uploader_name: "admin",
+          created_at: "2025-08-14T11:11:12.969Z",
+          updated_at: "2025-08-14T11:11:12.969Z"
+        }
+      ];
     }
   } catch (error) {
     console.error('云数据库加载失败:', error);
-    loadFromLocalStorage();
+    // 使用默认的示例视频
+    videos = [
+      {
+        id: 1755169872969,
+        title: "示例视频",
+        description: "这是一个示例视频",
+        filename: "sample-video.mp4",
+        filepath: "https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/BigBuckBunny.mp4",
+        videoUrl: "https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/BigBuckBunny.mp4",
+        thumbnail_path: null,
+        duration: 0,
+        file_size: 0,
+        uploaded_by: 1755168092284,
+        uploader_name: "admin",
+        created_at: "2025-08-14T11:11:12.969Z",
+        updated_at: "2025-08-14T11:11:12.969Z"
+      }
+    ];
   }
 }
 
@@ -59,50 +89,14 @@ async function saveToCloudDatabase() {
     
     if (response.ok) {
       console.log('数据已保存到云数据库');
+      return true;
     } else {
       console.error('云数据库保存失败');
-      saveToLocalStorage(); // 降级到本地存储
+      return false;
     }
   } catch (error) {
     console.error('云数据库保存失败:', error);
-    saveToLocalStorage(); // 降级到本地存储
-  }
-}
-
-// 本地存储键名（作为备用）
-const STORAGE_KEYS = {
-  VIDEOS: 'video_platform_videos',
-  USER: 'video_platform_user'
-};
-
-// 从本地存储加载数据（备用方案）
-function loadFromLocalStorage() {
-  try {
-    const storedVideos = localStorage.getItem(STORAGE_KEYS.VIDEOS);
-    if (storedVideos) {
-      videos = JSON.parse(storedVideos);
-      console.log('从本地存储加载视频:', videos.length, '个');
-    }
-    
-    const storedUser = localStorage.getItem(STORAGE_KEYS.USER);
-    if (storedUser) {
-      currentUser = JSON.parse(storedUser);
-      console.log('从本地存储加载用户:', currentUser.username);
-    }
-  } catch (error) {
-    console.error('加载本地存储失败:', error);
-  }
-}
-
-// 保存数据到本地存储（备用方案）
-function saveToLocalStorage() {
-  try {
-    localStorage.setItem(STORAGE_KEYS.VIDEOS, JSON.stringify(videos));
-    if (currentUser) {
-      localStorage.setItem(STORAGE_KEYS.USER, JSON.stringify(currentUser));
-    }
-  } catch (error) {
-    console.error('保存到本地存储失败:', error);
+    return false;
   }
 }
 
@@ -185,7 +179,7 @@ function loadSettings() {
 // 页面加载完成后初始化
 document.addEventListener('DOMContentLoaded', function() {
     loadSettings(); // 加载设置
-    loadFromCloudDatabase(); // 优先从云数据库加载
+    loadFromCloudDatabase(); // 从云数据库加载
     checkAuthStatus();
     loadVideos();
     setupEventListeners();
@@ -311,36 +305,10 @@ async function loadVideos() {
             return;
         }
         
-        // 否则尝试从云数据库加载
+        // 从云数据库加载
         await loadFromCloudDatabase();
+        displayVideos(videos);
         
-        // 如果云数据库也没有数据，尝试从服务器加载
-        if (!videos || videos.length === 0) {
-            const response = await fetch('/api/videos');
-            
-            // 检查响应类型
-            const contentType = response.headers.get('content-type');
-            if (!contentType || !contentType.includes('application/json')) {
-                console.error('服务器返回非JSON响应:', await response.text());
-                showMessage('加载视频列表失败', 'error');
-                return;
-            }
-            
-            const data = await response.json();
-            console.log('视频列表数据:', data);
-            
-            if (response.ok && data.success) {
-                videos = data.videos || [];
-                console.log('设置视频列表:', videos);
-                await saveToCloudDatabase(); // 保存到云数据库
-                displayVideos(videos);
-            } else {
-                console.error('加载视频列表失败:', data.error);
-                showMessage(data.error || '加载视频列表失败', 'error');
-            }
-        } else {
-            displayVideos(videos);
-        }
     } catch (error) {
         console.error('加载视频列表失败:', error);
         showMessage('加载视频列表失败', 'error');
@@ -687,36 +655,31 @@ async function handleUpload(e) {
     const title = document.getElementById('uploadVideoTitle').value;
     const description = document.getElementById('uploadVideoDescription').value;
     const videoUrl = document.getElementById('uploadVideoUrl').value;
-    const file = document.getElementById('uploadVideoFile').files[0];
     
     if (!title) {
         showMessage('请输入视频标题', 'error');
         return;
     }
     
-    // 检查是否有视频URL或文件
-    if (!videoUrl && !file) {
-        showMessage('请输入视频URL或选择视频文件', 'error');
+    if (!videoUrl) {
+        showMessage('请输入视频链接', 'error');
         return;
     }
     
     try {
-        let videoSource = '';
+        // 验证OneDrive链接格式
+        let processedUrl = videoUrl;
         
-        if (videoUrl) {
-            // 使用外部视频URL
-            videoSource = videoUrl;
-        } else if (file) {
-            // 检查文件大小（限制为10MB）
-            const maxSize = 10 * 1024 * 1024; // 10MB
-            if (file.size > maxSize) {
-                showMessage(`视频文件大小不能超过10MB（当前: ${(file.size / 1024 / 1024).toFixed(1)}MB）`, 'error');
-                return;
+        // 处理OneDrive链接
+        if (videoUrl.includes('1drv.ms') || videoUrl.includes('onedrive.live.com')) {
+            // OneDrive分享链接，需要转换为直接下载链接
+            if (videoUrl.includes('?e=')) {
+                // 已经是直接链接格式
+                processedUrl = videoUrl;
+            } else {
+                // 需要转换为直接链接
+                processedUrl = videoUrl.replace('?e=', '?e=') + '&download=1';
             }
-            
-            // 提示用户上传到外部服务
-            showMessage('请先将视频上传到外部服务（如YouTube、Vimeo等），然后输入视频URL', 'info');
-            return;
         }
         
         // 创建新视频对象
@@ -724,23 +687,30 @@ async function handleUpload(e) {
             id: Date.now(),
             title: title,
             description: description || '',
-            filename: file ? file.name : 'external-video',
-            filepath: videoSource,
-            videoUrl: videoSource,
+            filename: 'onedrive-video.mp4',
+            filepath: processedUrl,
+            videoUrl: processedUrl,
             thumbnail_path: null,
             duration: 0,
-            file_size: file ? file.size : 0,
+            file_size: 0,
             uploaded_by: currentUser ? currentUser.id : 1755168092284,
             uploader_name: currentUser ? currentUser.username : "admin",
             created_at: new Date().toISOString(),
             updated_at: new Date().toISOString()
         };
         
-        // 添加到本地视频列表
+        // 添加到视频列表
         videos.push(newVideo);
-        await saveToCloudDatabase(); // 保存到云数据库
         
-        showMessage('视频上传成功', 'success');
+        // 保存到云数据库
+        const saveSuccess = await saveToCloudDatabase();
+        
+        if (saveSuccess) {
+            showMessage('视频上传成功！其他设备也能看到这个视频', 'success');
+        } else {
+            showMessage('视频已添加，但保存到云数据库失败', 'warning');
+        }
+        
         closeModal('uploadModal');
         
         // 清空表单

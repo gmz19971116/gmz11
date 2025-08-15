@@ -166,14 +166,14 @@
                     <textarea id="uploadVideoDescription" name="description" rows="3" autocomplete="off"></textarea>
                 </div>
                 <div class="form-group">
-                    <label for="uploadVideoUrl">视频URL（推荐）</label>
-                    <input type="url" id="uploadVideoUrl" name="videoUrl" placeholder="https://example.com/video.mp4" autocomplete="off">
-                    <small>支持直接视频链接，或YouTube/Vimeo等平台链接</small>
-                </div>
-                <div class="form-group">
-                    <label for="uploadVideoFile">或选择视频文件</label>
-                    <input type="file" id="uploadVideoFile" name="video" accept="video/*">
-                    <small>注意：由于平台限制，建议使用视频URL方式</small>
+                    <label for="uploadVideoUrl">OneDrive视频链接</label>
+                    <input type="url" id="uploadVideoUrl" name="videoUrl" placeholder="https://1drv.ms/v/xxxxx 或 https://onedrive.live.com/..." autocomplete="off" required>
+                    <small>
+                        <strong>使用步骤：</strong><br>
+                        1. 将视频上传到OneDrive<br>
+                        2. 右键点击视频 → "分享" → "复制链接"<br>
+                        3. 粘贴链接到上面的输入框
+                    </small>
                 </div>
                 <button type="submit" class="btn btn-primary">上传视频</button>
             </form>
