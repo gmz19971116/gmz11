@@ -8,6 +8,18 @@
   ],
   "routes": [
     {
+      "src": "/styles.css",
+      "dest": "/public/styles.css"
+    },
+    {
+      "src": "/script.js", 
+      "dest": "/public/script.js"
+    },
+    {
+      "src": "/favicon.ico",
+      "dest": "/public/favicon.ico"
+    },
+    {
       "src": "/api/(.*)",
       "dest": "/server.js"
     },

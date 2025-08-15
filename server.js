@@ -72,9 +72,23 @@ app.use(express.urlencoded({ extended: true })); // 解析URL编码请求体
 
 // 静态文件服务
 if (!isVercel) {
-    app.use('/uploads', express.static(path.join(__dirname, 'uploads'))); // 提供上传文件的静态访问
+    app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
 }
-app.use(express.static(path.join(__dirname, 'public'))); // 提供前端静态文件访问
+
+// 静态文件路由（优先级最高）
+app.get('/styles.css', (req, res) => {
+    res.sendFile(path.join(__dirname, 'public', 'styles.css'));
+});
+
+app.get('/script.js', (req, res) => {
+    res.sendFile(path.join(__dirname, 'public', 'script.js'));
+});
+
+app.get('/favicon.ico', (req, res) => {
+    res.sendFile(path.join(__dirname, 'public', 'favicon.ico'));
+});
+
+app.use(express.static(path.join(__dirname, 'public')));
 
 // 会话配置
 app.use(session({
