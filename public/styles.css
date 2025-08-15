@@ -7,14 +7,14 @@
 
 body {
     font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%) !important;
     min-height: 100vh;
     color: #333;
 }
 
 /* 导航栏 */
 .navbar {
-    background: rgba(255, 255, 255, 0.95);
+    background: rgba(255, 255, 255, 0.95) !important;
     backdrop-filter: blur(10px);
     box-shadow: 0 2px 20px rgba(0, 0, 0, 0.1);
     position: fixed;
@@ -86,8 +86,8 @@ body {
 }
 
 .btn-primary {
-    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-    color: white;
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%) !important;
+    color: white !important;
 }
 
 .btn-primary:hover {
@@ -96,20 +96,20 @@ body {
 }
 
 .btn-secondary {
-    background: rgba(255, 255, 255, 0.9);
-    color: #667eea;
+    background: rgba(255, 255, 255, 0.9) !important;
+    color: #667eea !important;
     border: 2px solid #667eea;
 }
 
 .btn-secondary:hover {
-    background: #667eea;
-    color: white;
+    background: #667eea !important;
+    color: white !important;
     transform: translateY(-2px);
 }
 
 .btn-warning {
-    background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
-    color: white;
+    background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%) !important;
+    color: white !important;
 }
 
 .btn-warning:hover {
@@ -118,8 +118,8 @@ body {
 }
 
 .btn-danger {
-    background: linear-gradient(135deg, #ff6b6b 0%, #ee5a24 100%);
-    color: white;
+    background: linear-gradient(135deg, #ff6b6b 0%, #ee5a24 100%) !important;
+    color: white !important;
     padding: 0.5rem 1rem;
     font-size: 0.875rem;
 }
@@ -156,7 +156,7 @@ body {
 .hero-section {
     text-align: center;
     padding: 4rem 2rem;
-    background: rgba(255, 255, 255, 0.95);
+    background: rgba(255, 255, 255, 0.95) !important;
     border-radius: 20px;
     box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
     margin-bottom: 2rem;
@@ -184,7 +184,7 @@ body {
     align-items: center;
     margin-bottom: 2rem;
     padding: 2rem;
-    background: rgba(255, 255, 255, 0.95);
+    background: rgba(255, 255, 255, 0.95) !important;
     border-radius: 15px;
     box-shadow: 0 5px 20px rgba(0, 0, 0, 0.1);
 }
@@ -216,8 +216,8 @@ body {
 
 .search-btn {
     padding: 0.75rem 1rem;
-    background: #667eea;
-    color: white;
+    background: #667eea !important;
+    color: white !important;
     border: none;
     border-radius: 8px;
     cursor: pointer;
@@ -225,7 +225,7 @@ body {
 }
 
 .search-btn:hover {
-    background: #5a6fd8;
+    background: #5a6fd8 !important;
 }
 
 /* 视频网格 */
@@ -238,7 +238,7 @@ body {
 
 /* 视频卡片 */
 .video-card {
-    background: rgba(255, 255, 255, 0.95);
+    background: rgba(255, 255, 255, 0.95) !important;
     border-radius: 15px;
     overflow: hidden;
     box-shadow: 0 5px 20px rgba(0, 0, 0, 0.1);
@@ -294,7 +294,7 @@ body {
 
 /* 播放器容器 */
 .player-container {
-    background: rgba(255, 255, 255, 0.95);
+    background: rgba(255, 255, 255, 0.95) !important;
     border-radius: 15px;
     overflow: hidden;
     box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
