@@ -61,7 +61,7 @@ app.use('/api/auth', authRoutes); // 认证相关路由
 app.use('/api/videos', videoRoutes); // 视频相关路由
 app.use('/api/users', userRoutes); // 用户相关路由
 
-// 处理静态文件请求
+// 处理静态文件请求（确保在Vercel环境中也能工作）
 app.get('*.js', (req, res) => {
     const filePath = path.join(__dirname, 'public', req.path);
     if (fs.existsSync(filePath)) {
@@ -72,6 +72,15 @@ app.get('*.js', (req, res) => {
 });
 
 app.get('*.css', (req, res) => {
+    const filePath = path.join(__dirname, 'public', req.path);
+    if (fs.existsSync(filePath)) {
+        res.sendFile(filePath);
+    } else {
+        res.status(404).send('File not found');
+    }
+});
+
+app.get('*.html', (req, res) => {
     const filePath = path.join(__dirname, 'public', req.path);
     if (fs.existsSync(filePath)) {
         res.sendFile(filePath);
