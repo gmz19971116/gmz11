@@ -844,36 +844,40 @@ async function handleUpload(e) {
         if (videoUrl.includes('1drv.ms') || videoUrl.includes('onedrive.live.com')) {
             console.log('原始OneDrive链接:', videoUrl);
             
-            // 移除任何现有的参数
-            let baseUrl = videoUrl.split('?')[0];
-            
-            // 如果是分享链接，需要转换为直接下载链接
-            if (baseUrl.includes('1drv.ms')) {
-                // 1drv.ms链接需要转换为onedrive.live.com的直接下载链接
-                // 从1drv.ms链接中提取ID
-                const match = baseUrl.match(/\/v\/([^\/]+)/);
+            // 处理1drv.ms链接
+            if (videoUrl.includes('1drv.ms')) {
+                // 从1drv.ms链接中提取完整的文件ID
+                const match = videoUrl.match(/\/v\/([^\/\?]+)/);
                 if (match) {
                     const fileId = match[1];
+                    console.log('提取的文件ID:', fileId);
+                    // 使用完整的文件ID创建下载链接
                     processedUrl = `https://onedrive.live.com/download.aspx?cid=${fileId}`;
+                } else {
+                    console.error('无法从1drv.ms链接中提取文件ID');
+                    showMessage('OneDrive链接格式不正确，请检查链接', 'error');
+                    return;
                 }
-            } else if (baseUrl.includes('onedrive.live.com')) {
-                // onedrive.live.com链接，尝试转换为直接下载链接
+            } else if (videoUrl.includes('onedrive.live.com')) {
+                // 处理onedrive.live.com链接
+                let baseUrl = videoUrl.split('?')[0];
+                
                 if (baseUrl.includes('/redir?')) {
                     // 已经是重定向链接，添加下载参数
-                    processedUrl = baseUrl + '&download=1';
+                    processedUrl = videoUrl + '&download=1';
                 } else if (baseUrl.includes('/embed/')) {
                     // 嵌入链接，转换为下载链接
                     processedUrl = baseUrl.replace('/embed/', '/redir?') + '&download=1';
                 } else if (baseUrl.includes('/viewid=')) {
                     // 查看链接，转换为下载链接
-                    const viewMatch = baseUrl.match(/\/viewid=([^\/]+)/);
+                    const viewMatch = videoUrl.match(/viewid=([^&]+)/);
                     if (viewMatch) {
                         const viewId = viewMatch[1];
                         processedUrl = `https://onedrive.live.com/download.aspx?viewid=${viewId}`;
                     }
                 } else {
                     // 其他格式，尝试添加下载参数
-                    processedUrl = baseUrl + '?download=1';
+                    processedUrl = videoUrl + '?download=1';
                 }
             }
             
