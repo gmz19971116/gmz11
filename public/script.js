@@ -4,127 +4,168 @@ let videos = [];
 
 // JSONBin.io配置
 const JSONBIN_CONFIG = {
-  BIN_ID: '', // 需要用户自己设置
-  API_KEY: '', // 需要用户自己设置
-  BASE_URL: 'https://api.jsonbin.io/v3/b'
+    BIN_ID: localStorage.getItem('jsonbin_bin_id') || '', // 从本地存储读取
+    API_KEY: localStorage.getItem('jsonbin_api_key') || '', // 从本地存储读取
+    BASE_URL: 'https://api.jsonbin.io/v3/b'
 };
 
 // 从云数据库加载数据
 async function loadFromCloudDatabase() {
-  // 检查配置是否完整
-  if (!JSONBIN_CONFIG.BIN_ID || !JSONBIN_CONFIG.API_KEY) {
-    console.log('JSONBin.io未配置，使用默认数据');
-    videos = [
-      {
-        id: 1755169872969,
-        title: "示例视频",
-        description: "这是一个示例视频，请配置JSONBin.io来保存你的视频",
-        filename: "sample-video.mp4",
-        filepath: "https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/BigBuckBunny.mp4",
-        videoUrl: "https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/BigBuckBunny.mp4",
-        thumbnail_path: null,
-        duration: 0,
-        file_size: 0,
-        uploaded_by: 1755168092284,
-        uploader_name: "admin",
-        created_at: "2025-08-14T11:11:12.969Z",
-        updated_at: "2025-08-14T11:11:12.969Z"
-      }
-    ];
-    return;
-  }
-
-  try {
-    console.log('从云数据库加载数据...');
-    const response = await fetch(`${JSONBIN_CONFIG.BASE_URL}/${JSONBIN_CONFIG.BIN_ID}`, {
-      headers: {
-        'X-Master-Key': JSONBIN_CONFIG.API_KEY
-      }
-    });
+    console.log('开始从云数据库加载数据...');
     
-    if (response.ok) {
-      const data = await response.json();
-      if (data.record && data.record.videos) {
-        videos = data.record.videos;
-        console.log('从云数据库加载视频:', videos.length, '个');
-      }
-    } else {
-      console.log('云数据库加载失败，使用默认数据');
-      videos = [
-        {
-          id: 1755169872969,
-          title: "示例视频",
-          description: "这是一个示例视频，请配置JSONBin.io来保存你的视频",
-          filename: "sample-video.mp4",
-          filepath: "https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/BigBuckBunny.mp4",
-          videoUrl: "https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/BigBuckBunny.mp4",
-          thumbnail_path: null,
-          duration: 0,
-          file_size: 0,
-          uploaded_by: 1755168092284,
-          uploader_name: "admin",
-          created_at: "2025-08-14T11:11:12.969Z",
-          updated_at: "2025-08-14T11:11:12.969Z"
-        }
-      ];
+    // 检查配置是否完整
+    if (!JSONBIN_CONFIG.BIN_ID || !JSONBIN_CONFIG.API_KEY) {
+        console.log('JSONBin.io未配置，使用默认数据');
+        // 使用默认示例视频
+        videos = [
+            {
+                id: 1,
+                title: "示例视频 1",
+                description: "这是一个示例视频，用于演示平台功能",
+                filename: "sample1.mp4",
+                filepath: "https://sample-videos.com/zip/10/mp4/SampleVideo_1280x720_1mb.mp4",
+                videoUrl: "https://sample-videos.com/zip/10/mp4/SampleVideo_1280x720_1mb.mp4",
+                thumbnail_path: null,
+                duration: 10,
+                file_size: 1024000,
+                uploaded_by: 1755168092284,
+                uploader_name: "admin",
+                created_at: "2024-01-01T00:00:00.000Z",
+                updated_at: "2024-01-01T00:00:00.000Z"
+            }
+        ];
+        return false;
     }
-  } catch (error) {
-    console.error('云数据库加载失败:', error);
-    videos = [
-      {
-        id: 1755169872969,
-        title: "示例视频",
-        description: "这是一个示例视频，请配置JSONBin.io来保存你的视频",
-        filename: "sample-video.mp4",
-        filepath: "https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/BigBuckBunny.mp4",
-        videoUrl: "https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/BigBuckBunny.mp4",
-        thumbnail_path: null,
-        duration: 0,
-        file_size: 0,
-        uploaded_by: 1755168092284,
-        uploader_name: "admin",
-        created_at: "2025-08-14T11:11:12.969Z",
-        updated_at: "2025-08-14T11:11:12.969Z"
-      }
-    ];
-  }
+    
+    try {
+        const response = await fetch(`${JSONBIN_CONFIG.BASE_URL}/${JSONBIN_CONFIG.BIN_ID}`, {
+            method: 'GET',
+            headers: {
+                'X-Master-Key': JSONBIN_CONFIG.API_KEY,
+                'Content-Type': 'application/json'
+            }
+        });
+        
+        if (response.ok) {
+            const data = await response.json();
+            console.log('从云数据库加载成功:', data);
+            
+            if (data.record && data.record.videos) {
+                videos = data.record.videos;
+                console.log('加载到', videos.length, '个视频');
+                return true;
+            } else {
+                console.log('云数据库中没有视频数据，使用默认数据');
+                videos = [
+                    {
+                        id: 1,
+                        title: "示例视频 1",
+                        description: "这是一个示例视频，用于演示平台功能",
+                        filename: "sample1.mp4",
+                        filepath: "https://sample-videos.com/zip/10/mp4/SampleVideo_1280x720_1mb.mp4",
+                        videoUrl: "https://sample-videos.com/zip/10/mp4/SampleVideo_1280x720_1mb.mp4",
+                        thumbnail_path: null,
+                        duration: 10,
+                        file_size: 1024000,
+                        uploaded_by: 1755168092284,
+                        uploader_name: "admin",
+                        created_at: "2024-01-01T00:00:00.000Z",
+                        updated_at: "2024-01-01T00:00:00.000Z"
+                    }
+                ];
+                return false;
+            }
+        } else {
+            console.error('云数据库加载失败:', response.status, response.statusText);
+            // 使用默认数据
+            videos = [
+                {
+                    id: 1,
+                    title: "示例视频 1",
+                    description: "这是一个示例视频，用于演示平台功能",
+                    filename: "sample1.mp4",
+                    filepath: "https://sample-videos.com/zip/10/mp4/SampleVideo_1280x720_1mb.mp4",
+                    videoUrl: "https://sample-videos.com/zip/10/mp4/SampleVideo_1280x720_1mb.mp4",
+                    thumbnail_path: null,
+                    duration: 10,
+                    file_size: 1024000,
+                    uploaded_by: 1755168092284,
+                    uploader_name: "admin",
+                    created_at: "2024-01-01T00:00:00.000Z",
+                    updated_at: "2024-01-01T00:00:00.000Z"
+                }
+            ];
+            return false;
+        }
+    } catch (error) {
+        console.error('云数据库加载出错:', error);
+        // 使用默认数据
+        videos = [
+            {
+                id: 1,
+                title: "示例视频 1",
+                description: "这是一个示例视频，用于演示平台功能",
+                filename: "sample1.mp4",
+                filepath: "https://sample-videos.com/zip/10/mp4/SampleVideo_1280x720_1mb.mp4",
+                videoUrl: "https://sample-videos.com/zip/10/mp4/SampleVideo_1280x720_1mb.mp4",
+                thumbnail_path: null,
+                duration: 10,
+                file_size: 1024000,
+                uploaded_by: 1755168092284,
+                uploader_name: "admin",
+                created_at: "2024-01-01T00:00:00.000Z",
+                updated_at: "2024-01-01T00:00:00.000Z"
+            }
+        ];
+        return false;
+    }
 }
 
-// 保存数据到云数据库
+// 保存到云数据库
 async function saveToCloudDatabase() {
-  // 检查配置是否完整
-  if (!JSONBIN_CONFIG.BIN_ID || !JSONBIN_CONFIG.API_KEY) {
-    console.log('JSONBin.io未配置，无法保存到云数据库');
-    return false;
-  }
-
-  try {
-    const dataToSave = {
-      videos: videos,
-      users: [currentUser].filter(Boolean),
-      lastUpdated: new Date().toISOString()
-    };
+    console.log('开始保存到云数据库...');
     
-    const response = await fetch(`${JSONBIN_CONFIG.BASE_URL}/${JSONBIN_CONFIG.BIN_ID}`, {
-      method: 'PUT',
-      headers: {
-        'Content-Type': 'application/json',
-        'X-Master-Key': JSONBIN_CONFIG.API_KEY
-      },
-      body: JSON.stringify(dataToSave)
-    });
-    
-    if (response.ok) {
-      console.log('数据已保存到云数据库');
-      return true;
-    } else {
-      console.error('云数据库保存失败');
-      return false;
+    // 检查配置是否完整
+    if (!JSONBIN_CONFIG.BIN_ID || !JSONBIN_CONFIG.API_KEY) {
+        console.log('JSONBin.io未配置，无法保存到云数据库');
+        return false;
     }
-  } catch (error) {
-    console.error('云数据库保存失败:', error);
-    return false;
-  }
+    
+    try {
+        const dataToSave = {
+            videos: videos,
+            users: [
+                {
+                    id: 1755168092284,
+                    username: "admin",
+                    email: "admin@example.com",
+                    password_hash: "$2a$10$example",
+                    is_admin: true,
+                    created_at: "2024-01-01T00:00:00.000Z"
+                }
+            ]
+        };
+        
+        const response = await fetch(`${JSONBIN_CONFIG.BASE_URL}/${JSONBIN_CONFIG.BIN_ID}`, {
+            method: 'PUT',
+            headers: {
+                'X-Master-Key': JSONBIN_CONFIG.API_KEY,
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify(dataToSave)
+        });
+        
+        if (response.ok) {
+            console.log('保存到云数据库成功');
+            return true;
+        } else {
+            console.error('保存到云数据库失败:', response.status, response.statusText);
+            return false;
+        }
+    } catch (error) {
+        console.error('保存到云数据库出错:', error);
+        return false;
+    }
 }
 
 // 显示设置模态框
@@ -137,70 +178,77 @@ function showSettingsModal() {
 
 // 保存设置
 function saveSettings() {
-    const binId = document.getElementById('jsonbinBinId').value;
-    const apiKey = document.getElementById('jsonbinApiKey').value;
+    const binId = document.getElementById('jsonbinBinId').value.trim();
+    const apiKey = document.getElementById('jsonbinApiKey').value.trim();
     
     if (!binId || !apiKey) {
-        showMessage('请填写完整的设置信息', 'error');
+        showMessage('请填写完整的JSONBin.io配置信息', 'error');
         return;
     }
     
-    // 更新配置
+    // 保存到本地存储
+    localStorage.setItem('jsonbin_bin_id', binId);
+    localStorage.setItem('jsonbin_api_key', apiKey);
+    
+    // 更新配置对象
     JSONBIN_CONFIG.BIN_ID = binId;
     JSONBIN_CONFIG.API_KEY = apiKey;
     
-    // 保存到本地存储
-    localStorage.setItem('jsonbin_config', JSON.stringify(JSONBIN_CONFIG));
-    
-    showMessage('设置已保存', 'success');
+    showMessage('设置保存成功！', 'success');
     closeModal('settingsModal');
+    
+    // 重新加载数据
+    loadFromCloudDatabase().then(() => {
+        displayVideos(videos);
+    });
 }
 
 // 测试连接
 async function testConnection() {
-    const binId = document.getElementById('jsonbinBinId').value;
-    const apiKey = document.getElementById('jsonbinApiKey').value;
+    const binId = document.getElementById('jsonbinBinId').value.trim();
+    const apiKey = document.getElementById('jsonbinApiKey').value.trim();
     
     if (!binId || !apiKey) {
-        showMessage('请填写完整的设置信息', 'error');
+        showMessage('请先填写JSONBin.io配置信息', 'error');
         return;
     }
     
     try {
         const response = await fetch(`https://api.jsonbin.io/v3/b/${binId}`, {
+            method: 'GET',
             headers: {
-                'X-Master-Key': apiKey
+                'X-Master-Key': apiKey,
+                'Content-Type': 'application/json'
             }
         });
         
         if (response.ok) {
             showMessage('连接测试成功！', 'success');
         } else {
-            showMessage('连接测试失败，请检查设置', 'error');
+            showMessage(`连接测试失败: ${response.status} ${response.statusText}`, 'error');
         }
     } catch (error) {
-        showMessage('连接测试失败：' + error.message, 'error');
+        console.error('连接测试失败:', error);
+        showMessage('连接测试失败，请检查配置信息', 'error');
     }
 }
 
 // 加载设置
 function loadSettings() {
-    try {
-        const savedConfig = localStorage.getItem('jsonbin_config');
-        if (savedConfig) {
-            const config = JSON.parse(savedConfig);
-            JSONBIN_CONFIG.BIN_ID = config.BIN_ID || JSONBIN_CONFIG.BIN_ID;
-            JSONBIN_CONFIG.API_KEY = config.API_KEY || JSONBIN_CONFIG.API_KEY;
-            
-            // 更新设置页面的值
-            const binIdInput = document.getElementById('jsonbinBinId');
-            const apiKeyInput = document.getElementById('jsonbinApiKey');
-            if (binIdInput) binIdInput.value = JSONBIN_CONFIG.BIN_ID;
-            if (apiKeyInput) apiKeyInput.value = JSONBIN_CONFIG.API_KEY;
-        }
-    } catch (error) {
-        console.error('加载设置失败:', error);
-    }
+    const binId = localStorage.getItem('jsonbin_bin_id') || '';
+    const apiKey = localStorage.getItem('jsonbin_api_key') || '';
+    
+    const binIdInput = document.getElementById('jsonbinBinId');
+    const apiKeyInput = document.getElementById('jsonbinApiKey');
+    
+    if (binIdInput) binIdInput.value = binId;
+    if (apiKeyInput) apiKeyInput.value = apiKey;
+    
+    // 更新配置对象
+    JSONBIN_CONFIG.BIN_ID = binId;
+    JSONBIN_CONFIG.API_KEY = apiKey;
+    
+    console.log('加载设置完成:', { binId: binId ? '已设置' : '未设置', apiKey: apiKey ? '已设置' : '未设置' });
 }
 
 // 页面加载完成后初始化
@@ -420,20 +468,19 @@ async function playVideo(videoId) {
             return;
         }
         
-        console.log('找到视频:', video.title);
+        console.log('找到视频:', video.id);
         console.log('切换到播放页面');
+        
         showPage('player');
         
         const videoTitle = document.getElementById('videoTitle');
         const videoDescription = document.getElementById('videoDescription');
-        const videoUploader = document.getElementById('videoUploader');
-        const videoDuration = document.getElementById('videoDuration');
         const videoDate = document.getElementById('videoDate');
+        const videoUploader = document.getElementById('videoUploader');
         
         if (videoTitle) videoTitle.textContent = video.title;
         if (videoDescription) videoDescription.textContent = video.description || '暂无描述';
-        if (videoUploader) videoUploader.textContent = `上传者: ${video.uploader_name || '未知用户'}`;
-        if (videoDuration) videoDuration.textContent = `时长: ${formatDuration(video.duration)}`;
+        if (videoUploader) videoUploader.textContent = `上传者: ${video.uploader_name}`;
         if (videoDate) videoDate.textContent = `上传时间: ${formatDate(video.created_at)}`;
         
         const videoPlayer = document.getElementById('videoPlayer');
@@ -445,12 +492,26 @@ async function playVideo(videoId) {
             if (video.videoUrl) {
                 videoSrc = video.videoUrl;
                 console.log('使用外部视频URL:', videoSrc);
+                
+                // 处理OneDrive链接
+                if (videoSrc.includes('1drv.ms') || videoSrc.includes('onedrive.live.com')) {
+                    // 尝试转换为直接播放链接
+                    if (videoSrc.includes('1drv.ms')) {
+                        // 1drv.ms链接需要特殊处理
+                        videoSrc = videoSrc.replace('1drv.ms', 'onedrive.live.com').replace('/v/', '/embed/');
+                    } else if (videoSrc.includes('onedrive.live.com')) {
+                        // 转换为嵌入链接
+                        videoSrc = videoSrc.replace('/redir?', '/embed?');
+                    }
+                    
+                    console.log('处理后的OneDrive链接:', videoSrc);
+                }
             } else {
+                // 使用示例视频
                 const sampleVideos = [
                     'https://sample-videos.com/zip/10/mp4/SampleVideo_1280x720_1mb.mp4',
                     'https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/BigBuckBunny.mp4',
-                    'https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ElephantsDream.mp4',
-                    'https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerBlazes.mp4'
+                    'https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ElephantsDream.mp4'
                 ];
                 
                 const videoIndex = videoId % sampleVideos.length;
@@ -464,14 +525,13 @@ async function playVideo(videoId) {
             
             videoPlayer.play().catch(error => {
                 console.log('自动播放失败，需要用户手动点击播放:', error);
+                showMessage('请点击播放按钮开始播放', 'info');
             });
-        } else {
-            console.error('未找到视频播放器元素');
         }
         
     } catch (error) {
         console.error('播放视频失败:', error);
-        showMessage('播放视频失败，请稍后重试', 'error');
+        showMessage('播放失败，请稍后重试', 'error');
     }
 }
 
@@ -666,22 +726,25 @@ async function handleUpload(e) {
     }
     
     try {
-        // 验证OneDrive链接格式
         let processedUrl = videoUrl;
         
-        // 处理OneDrive链接
+        // 处理OneDrive链接 - 转换为直接下载链接
         if (videoUrl.includes('1drv.ms') || videoUrl.includes('onedrive.live.com')) {
-            // OneDrive分享链接，需要转换为直接下载链接
-            if (videoUrl.includes('?e=')) {
-                // 已经是直接链接格式
-                processedUrl = videoUrl;
-            } else {
-                // 需要转换为直接链接
-                processedUrl = videoUrl.replace('?e=', '?e=') + '&download=1';
+            // 移除任何现有的参数
+            let baseUrl = videoUrl.split('?')[0];
+            
+            // 如果是分享链接，需要转换为直接下载链接
+            if (baseUrl.includes('1drv.ms')) {
+                // 1drv.ms链接需要特殊处理
+                processedUrl = baseUrl + '?download=1';
+            } else if (baseUrl.includes('onedrive.live.com')) {
+                // onedrive.live.com链接
+                processedUrl = baseUrl + '?download=1';
             }
+            
+            console.log('处理OneDrive链接:', videoUrl, '->', processedUrl);
         }
         
-        // 创建新视频对象
         const newVideo = {
             id: Date.now(),
             title: title,
@@ -698,25 +761,21 @@ async function handleUpload(e) {
             updated_at: new Date().toISOString()
         };
         
-        // 添加到视频列表
+        // 先添加到本地数组
         videos.push(newVideo);
+        displayVideos(videos);
         
-        // 保存到云数据库
+        // 尝试保存到云数据库
         const saveSuccess = await saveToCloudDatabase();
         
         if (saveSuccess) {
             showMessage('视频上传成功！其他设备也能看到这个视频', 'success');
         } else {
-            showMessage('视频已添加，但保存到云数据库失败', 'warning');
+            showMessage('视频已添加，但云数据库保存失败。请配置JSONBin.io设置。', 'warning');
         }
         
         closeModal('uploadModal');
-        
-        // 清空表单
         document.getElementById('uploadForm').reset();
-        
-        // 重新显示视频列表
-        displayVideos(videos);
         
     } catch (error) {
         console.error('上传失败:', error);
