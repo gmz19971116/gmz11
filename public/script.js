@@ -571,27 +571,27 @@ async function playVideo(videoId) {
                         console.log('使用已处理的OneDrive下载链接:', videoSrc);
                     } else {
                         // 需要重新处理链接
-                        let baseUrl = videoSrc.split('?')[0];
+                        console.log('重新处理OneDrive链接');
                         
-                        if (baseUrl.includes('1drv.ms')) {
-                            const match = baseUrl.match(/\/v\/([^\/]+)/);
-                            if (match) {
+                        if (videoSrc.includes('1drv.ms')) {
+                            const match = videoSrc.match(/\/v\/([^\/\?]+)/);
+                            if (match && match[1] && match[1].length > 1) {
                                 const fileId = match[1];
                                 videoSrc = `https://onedrive.live.com/download.aspx?cid=${fileId}`;
                             }
-                        } else if (baseUrl.includes('onedrive.live.com')) {
-                            if (baseUrl.includes('/redir?')) {
-                                videoSrc = baseUrl + '&download=1';
-                            } else if (baseUrl.includes('/embed/')) {
-                                videoSrc = baseUrl.replace('/embed/', '/redir?') + '&download=1';
-                            } else if (baseUrl.includes('/viewid=')) {
-                                const viewMatch = baseUrl.match(/\/viewid=([^\/]+)/);
-                                if (viewMatch) {
+                        } else if (videoSrc.includes('onedrive.live.com')) {
+                            if (videoSrc.includes('/redir?')) {
+                                videoSrc = videoSrc + '&download=1';
+                            } else if (videoSrc.includes('/embed/')) {
+                                videoSrc = videoSrc.replace('/embed/', '/redir?') + '&download=1';
+                            } else if (videoSrc.includes('viewid=')) {
+                                const viewMatch = videoSrc.match(/viewid=([^&]+)/);
+                                if (viewMatch && viewMatch[1]) {
                                     const viewId = viewMatch[1];
                                     videoSrc = `https://onedrive.live.com/download.aspx?viewid=${viewId}`;
                                 }
                             } else {
-                                videoSrc = baseUrl + '?download=1';
+                                videoSrc = videoSrc + '?download=1';
                             }
                         }
                         
@@ -621,20 +621,13 @@ async function playVideo(videoId) {
             
             videoPlayer.oncanplay = function() {
                 console.log('视频可以播放');
+                // 视频可以播放时，提示用户点击播放
+                showMessage('视频已加载完成，请点击播放按钮开始播放', 'info');
             };
             
-            // 延迟自动播放，避免被中断
-            setTimeout(() => {
-                const playPromise = videoPlayer.play();
-                if (playPromise !== undefined) {
-                    playPromise.then(() => {
-                        console.log('自动播放成功');
-                    }).catch(error => {
-                        console.log('自动播放失败，需要用户手动点击播放:', error);
-                        showMessage('请点击播放按钮开始播放', 'info');
-                    });
-                }
-            }, 1000);
+            // 不自动播放，让用户手动点击
+            console.log('视频已设置，请手动点击播放按钮');
+            showMessage('视频已设置，请点击播放按钮开始播放', 'info');
             
         } else {
             console.error('未找到视频播放器元素');
@@ -849,6 +842,8 @@ async function handleUpload(e) {
                 // 从1drv.ms链接中提取完整的文件ID
                 // 匹配 /v/ 后面的所有字符，直到遇到 / 或 ? 或字符串结束
                 const match = videoUrl.match(/\/v\/([^\/\?]+)/);
+                console.log('正则匹配结果:', match);
+                
                 if (match && match[1] && match[1].length > 1) {
                     const fileId = match[1];
                     console.log('提取的文件ID:', fileId);
@@ -857,25 +852,39 @@ async function handleUpload(e) {
                 } else {
                     console.error('无法从1drv.ms链接中提取有效的文件ID');
                     console.error('匹配结果:', match);
-                    showMessage('OneDrive链接格式不正确，请检查链接', 'error');
-                    return;
+                    console.error('链接格式:', videoUrl);
+                    
+                    // 尝试其他方法提取文件ID
+                    const alternativeMatch = videoUrl.match(/\/v\/([^\/]+)/);
+                    if (alternativeMatch && alternativeMatch[1]) {
+                        const altFileId = alternativeMatch[1];
+                        console.log('使用备用方法提取的文件ID:', altFileId);
+                        processedUrl = `https://onedrive.live.com/download.aspx?cid=${altFileId}`;
+                    } else {
+                        showMessage('OneDrive链接格式不正确，请检查链接', 'error');
+                        return;
+                    }
                 }
             } else if (videoUrl.includes('onedrive.live.com')) {
                 // 处理onedrive.live.com链接
-                let baseUrl = videoUrl.split('?')[0];
+                console.log('处理onedrive.live.com链接');
                 
-                if (baseUrl.includes('/redir?')) {
+                if (videoUrl.includes('/redir?')) {
                     // 已经是重定向链接，添加下载参数
                     processedUrl = videoUrl + '&download=1';
-                } else if (baseUrl.includes('/embed/')) {
+                } else if (videoUrl.includes('/embed/')) {
                     // 嵌入链接，转换为下载链接
-                    processedUrl = baseUrl.replace('/embed/', '/redir?') + '&download=1';
-                } else if (baseUrl.includes('/viewid=')) {
+                    processedUrl = videoUrl.replace('/embed/', '/redir?') + '&download=1';
+                } else if (videoUrl.includes('viewid=')) {
                     // 查看链接，转换为下载链接
                     const viewMatch = videoUrl.match(/viewid=([^&]+)/);
-                    if (viewMatch) {
+                    if (viewMatch && viewMatch[1]) {
                         const viewId = viewMatch[1];
+                        console.log('提取的viewid:', viewId);
                         processedUrl = `https://onedrive.live.com/download.aspx?viewid=${viewId}`;
+                    } else {
+                        // 如果无法提取viewid，尝试添加下载参数
+                        processedUrl = videoUrl + '&download=1';
                     }
                 } else {
                     // 其他格式，尝试添加下载参数
