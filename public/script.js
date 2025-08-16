@@ -132,6 +132,11 @@ async function saveToCloudDatabase() {
     }
     
     try {
+        // 确保videos数组存在
+        if (!videos || !Array.isArray(videos)) {
+            videos = [];
+        }
+        
         const dataToSave = {
             videos: videos,
             users: [
@@ -143,8 +148,11 @@ async function saveToCloudDatabase() {
                     is_admin: true,
                     created_at: "2024-01-01T00:00:00.000Z"
                 }
-            ]
+            ],
+            lastUpdated: new Date().toISOString()
         };
+        
+        console.log('准备保存的数据:', dataToSave);
         
         const response = await fetch(`${JSONBIN_CONFIG.BASE_URL}/${JSONBIN_CONFIG.BIN_ID}`, {
             method: 'PUT',
@@ -156,10 +164,13 @@ async function saveToCloudDatabase() {
         });
         
         if (response.ok) {
-            console.log('保存到云数据库成功');
+            const result = await response.json();
+            console.log('保存到云数据库成功:', result);
             return true;
         } else {
             console.error('保存到云数据库失败:', response.status, response.statusText);
+            const errorText = await response.text();
+            console.error('错误详情:', errorText);
             return false;
         }
     } catch (error) {
@@ -493,18 +504,33 @@ async function playVideo(videoId) {
                 videoSrc = video.videoUrl;
                 console.log('使用外部视频URL:', videoSrc);
                 
-                // 处理OneDrive链接
+                // 处理OneDrive链接 - 确保使用直接下载链接
                 if (videoSrc.includes('1drv.ms') || videoSrc.includes('onedrive.live.com')) {
-                    // 尝试转换为直接播放链接
-                    if (videoSrc.includes('1drv.ms')) {
-                        // 1drv.ms链接需要特殊处理
-                        videoSrc = videoSrc.replace('1drv.ms', 'onedrive.live.com').replace('/v/', '/embed/');
-                    } else if (videoSrc.includes('onedrive.live.com')) {
-                        // 转换为嵌入链接
-                        videoSrc = videoSrc.replace('/redir?', '/embed?');
+                    // 如果已经是处理过的链接，直接使用
+                    if (videoSrc.includes('download.aspx') || videoSrc.includes('download=1')) {
+                        console.log('使用已处理的OneDrive下载链接:', videoSrc);
+                    } else {
+                        // 需要重新处理链接
+                        let baseUrl = videoSrc.split('?')[0];
+                        
+                        if (baseUrl.includes('1drv.ms')) {
+                            const match = baseUrl.match(/\/v\/([^\/]+)/);
+                            if (match) {
+                                const fileId = match[1];
+                                videoSrc = `https://onedrive.live.com/download.aspx?cid=${fileId}`;
+                            }
+                        } else if (baseUrl.includes('onedrive.live.com')) {
+                            if (baseUrl.includes('/redir?')) {
+                                videoSrc = baseUrl + '&download=1';
+                            } else if (baseUrl.includes('/embed/')) {
+                                videoSrc = baseUrl.replace('/embed/', '/redir?') + '&download=1';
+                            } else {
+                                videoSrc = baseUrl + '?download=1';
+                            }
+                        }
+                        
+                        console.log('重新处理OneDrive链接:', videoSrc);
                     }
-                    
-                    console.log('处理后的OneDrive链接:', videoSrc);
                 }
             } else {
                 // 使用示例视频
@@ -735,11 +761,25 @@ async function handleUpload(e) {
             
             // 如果是分享链接，需要转换为直接下载链接
             if (baseUrl.includes('1drv.ms')) {
-                // 1drv.ms链接需要特殊处理
-                processedUrl = baseUrl + '?download=1';
+                // 1drv.ms链接需要转换为onedrive.live.com的直接下载链接
+                // 从1drv.ms链接中提取ID
+                const match = baseUrl.match(/\/v\/([^\/]+)/);
+                if (match) {
+                    const fileId = match[1];
+                    processedUrl = `https://onedrive.live.com/download.aspx?cid=${fileId}`;
+                }
             } else if (baseUrl.includes('onedrive.live.com')) {
-                // onedrive.live.com链接
-                processedUrl = baseUrl + '?download=1';
+                // onedrive.live.com链接，尝试转换为直接下载链接
+                if (baseUrl.includes('/redir?')) {
+                    // 已经是重定向链接，添加下载参数
+                    processedUrl = baseUrl + '&download=1';
+                } else if (baseUrl.includes('/embed/')) {
+                    // 嵌入链接，转换为下载链接
+                    processedUrl = baseUrl.replace('/embed/', '/redir?') + '&download=1';
+                } else {
+                    // 其他格式，添加下载参数
+                    processedUrl = baseUrl + '?download=1';
+                }
             }
             
             console.log('处理OneDrive链接:', videoUrl, '->', processedUrl);
