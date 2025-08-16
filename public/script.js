@@ -564,6 +564,12 @@ async function playVideo(videoId) {
                 videoSrc = video.videoUrl;
                 console.log('使用视频URL:', videoSrc);
                 
+                // 检查是否是blob URL（本地文件）
+                if (videoSrc.startsWith('blob:')) {
+                    console.log('检测到blob URL（本地文件）');
+                    showMessage('这是本地文件，刷新页面后无法播放。建议使用在线视频链接。', 'warning');
+                }
+                
                 // 特殊处理Google Drive链接
                 if (videoSrc.includes('drive.google.com')) {
                     console.log('检测到Google Drive链接，尝试优化播放');
@@ -593,7 +599,12 @@ async function playVideo(videoId) {
             // 添加错误处理
             videoPlayer.onerror = function() {
                 console.error('视频加载失败:', videoSrc);
-                showMessage('视频加载失败，请检查链接或稍后重试', 'error');
+                
+                if (videoSrc.startsWith('blob:')) {
+                    showMessage('本地文件已失效，请重新上传或使用在线视频链接', 'error');
+                } else {
+                    showMessage('视频加载失败，请检查链接或稍后重试', 'error');
+                }
             };
             
             videoPlayer.onloadstart = function() {
