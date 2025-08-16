@@ -167,23 +167,30 @@
                 </div>
                 <div class="form-group">
                     <label for="uploadVideoUrl">视频链接</label>
-                    <input type="url" id="uploadVideoUrl" name="videoUrl" placeholder="请输入视频的直接播放链接" autocomplete="off" required>
+                    <input type="url" id="uploadVideoUrl" name="videoUrl" placeholder="请输入视频的直接播放链接" autocomplete="off">
                     <small>
-                        <strong>支持的视频链接格式：</strong><br>
-                        1. <strong>Google Drive</strong>: 
-                           - 上传视频到Google Drive
-                           - 右键点击视频 → "获取分享链接"
-                           - 确保设置为"任何人都可以查看"
-                           - 复制链接直接使用（系统会自动处理）<br>
-                        2. <strong>Dropbox</strong>: 上传到Dropbox，右键"分享"，选择"创建链接"，将链接末尾的"?dl=0"改为"?dl=1"<br>
-                        3. <strong>直接视频链接</strong>: 任何以.mp4、.webm、.ogg结尾的直接视频文件链接<br>
-                        4. <strong>示例视频</strong>: 可以先用示例视频测试功能
+                        <strong>推荐的视频托管服务：</strong><br>
+                        1. <strong>直接视频链接</strong>: 任何以.mp4、.webm、.ogg结尾的直接视频文件链接<br>
+                        2. <strong>示例视频</strong>: 先用示例视频测试功能<br>
+                        3. <strong>其他云存储</strong>: 如果Google Drive不工作，可以尝试其他服务<br>
+                        <br>
+                        <strong>Google Drive问题说明：</strong><br>
+                        Google Drive的分享链接格式经常变化，如果无法播放，建议使用其他视频托管服务。
                     </small>
                     <div class="test-links">
                         <button type="button" class="btn btn-secondary btn-sm" onclick="testVideoLink('https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/BigBuckBunny.mp4')">测试示例视频1</button>
                         <button type="button" class="btn btn-secondary btn-sm" onclick="testVideoLink('https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ElephantsDream.mp4')">测试示例视频2</button>
-                        <button type="button" class="btn btn-secondary btn-sm" onclick="testVideoLink('https://drive.google.com/file/d/1BweDk4rq7qXwJqJqJqJqJqJqJqJqJqJq/view?usp=sharing')">测试Google Drive格式</button>
+                        <button type="button" class="btn btn-secondary btn-sm" onclick="testVideoLink('https://sample-videos.com/zip/10/mp4/SampleVideo_1280x720_1mb.mp4')">测试示例视频3</button>
                     </div>
+                </div>
+                
+                <div class="form-group">
+                    <label>或者上传视频文件</label>
+                    <input type="file" id="uploadVideoFile" accept="video/*" style="display: none;">
+                    <button type="button" class="btn btn-outline-primary" onclick="document.getElementById('uploadVideoFile').click()">
+                        <i class="fas fa-upload"></i> 选择视频文件
+                    </button>
+                    <small id="selectedFileName" style="display: none; margin-top: 5px; color: #666;"></small>
                 </div>
                 <button type="submit" class="btn btn-primary">上传视频</button>
             </form>

@@ -822,28 +822,9 @@ async function handleUpload(e) {
         
         // 处理不同类型的视频链接
         if (videoUrl.includes('drive.google.com')) {
-            // Google Drive链接处理
-            if (videoUrl.includes('/view')) {
-                // 将view改为preview以支持直接播放
-                processedUrl = videoUrl.replace('/view', '/preview');
-                console.log('处理Google Drive链接:', videoUrl, '->', processedUrl);
-            } else if (videoUrl.includes('/file/d/')) {
-                // 如果是文件链接，转换为嵌入链接
-                const fileIdMatch = videoUrl.match(/\/file\/d\/([^\/]+)/);
-                if (fileIdMatch && fileIdMatch[1]) {
-                    const fileId = fileIdMatch[1];
-                    // 尝试多种Google Drive链接格式
-                    processedUrl = `https://drive.google.com/uc?export=download&id=${fileId}`;
-                    console.log('处理Google Drive文件链接:', videoUrl, '->', processedUrl);
-                }
-            } else if (videoUrl.includes('/uc?export=download')) {
-                // 已经是下载链接，直接使用
-                processedUrl = videoUrl;
-                console.log('使用Google Drive下载链接:', processedUrl);
-            }
-            
-            // 添加Google Drive特殊处理提示
-            showMessage('Google Drive链接已处理，如果无法播放请确保文件设置为"任何人都可以查看"', 'info');
+            // Google Drive链接 - 简化处理
+            console.log('检测到Google Drive链接:', videoUrl);
+            showMessage('Google Drive链接可能无法直接播放，建议使用其他视频托管服务', 'warning');
         } else if (videoUrl.includes('dropbox.com')) {
             // Dropbox链接处理
             if (videoUrl.includes('?dl=0')) {
@@ -855,10 +836,11 @@ async function handleUpload(e) {
                 processedUrl = videoUrl + '?dl=1';
                 console.log('处理Dropbox链接:', videoUrl, '->', processedUrl);
             }
-        } else if (videoUrl.includes('1drv.ms') || videoUrl.includes('onedrive.live.com')) {
-            // OneDrive链接 - 简化处理，直接使用原始链接
-            console.log('使用OneDrive链接:', videoUrl);
-            showMessage('OneDrive链接可能需要特殊处理，如果无法播放请尝试其他视频托管服务', 'warning');
+        } else if (videoUrl.endsWith('.mp4') || videoUrl.endsWith('.webm') || videoUrl.endsWith('.ogg')) {
+            // 直接视频文件链接
+            console.log('使用直接视频链接:', videoUrl);
+        } else {
+            console.log('使用其他类型链接:', videoUrl);
         }
         
         const newVideo = {
