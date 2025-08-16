@@ -563,6 +563,22 @@ async function playVideo(videoId) {
             if (video.videoUrl) {
                 videoSrc = video.videoUrl;
                 console.log('使用视频URL:', videoSrc);
+                
+                // 特殊处理Google Drive链接
+                if (videoSrc.includes('drive.google.com')) {
+                    console.log('检测到Google Drive链接，尝试优化播放');
+                    
+                    // 如果是Google Drive链接，尝试转换为更兼容的格式
+                    if (videoSrc.includes('/file/d/')) {
+                        const fileIdMatch = videoSrc.match(/\/file\/d\/([^\/]+)/);
+                        if (fileIdMatch && fileIdMatch[1]) {
+                            const fileId = fileIdMatch[1];
+                            // 使用Google Drive的嵌入格式
+                            videoSrc = `https://drive.google.com/uc?export=download&id=${fileId}`;
+                            console.log('转换为Google Drive下载链接:', videoSrc);
+                        }
+                    }
+                }
             } else {
                 // 使用Google的可靠示例视频
                 videoSrc = 'https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/BigBuckBunny.mp4';
@@ -811,7 +827,23 @@ async function handleUpload(e) {
                 // 将view改为preview以支持直接播放
                 processedUrl = videoUrl.replace('/view', '/preview');
                 console.log('处理Google Drive链接:', videoUrl, '->', processedUrl);
+            } else if (videoUrl.includes('/file/d/')) {
+                // 如果是文件链接，转换为嵌入链接
+                const fileIdMatch = videoUrl.match(/\/file\/d\/([^\/]+)/);
+                if (fileIdMatch && fileIdMatch[1]) {
+                    const fileId = fileIdMatch[1];
+                    // 尝试多种Google Drive链接格式
+                    processedUrl = `https://drive.google.com/uc?export=download&id=${fileId}`;
+                    console.log('处理Google Drive文件链接:', videoUrl, '->', processedUrl);
+                }
+            } else if (videoUrl.includes('/uc?export=download')) {
+                // 已经是下载链接，直接使用
+                processedUrl = videoUrl;
+                console.log('使用Google Drive下载链接:', processedUrl);
             }
+            
+            // 添加Google Drive特殊处理提示
+            showMessage('Google Drive链接已处理，如果无法播放请确保文件设置为"任何人都可以查看"', 'info');
         } else if (videoUrl.includes('dropbox.com')) {
             // Dropbox链接处理
             if (videoUrl.includes('?dl=0')) {
