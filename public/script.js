@@ -567,7 +567,7 @@ async function playVideo(videoId) {
                 // 处理OneDrive链接 - 确保使用直接下载链接
                 if (videoSrc.includes('1drv.ms') || videoSrc.includes('onedrive.live.com')) {
                     // 如果已经是处理过的链接，直接使用
-                    if (videoSrc.includes('download.aspx') || videoSrc.includes('download=1')) {
+                    if (videoSrc.includes('download.aspx')) {
                         console.log('使用已处理的OneDrive下载链接:', videoSrc);
                     } else {
                         // 需要重新处理链接
@@ -584,6 +584,12 @@ async function playVideo(videoId) {
                                 videoSrc = baseUrl + '&download=1';
                             } else if (baseUrl.includes('/embed/')) {
                                 videoSrc = baseUrl.replace('/embed/', '/redir?') + '&download=1';
+                            } else if (baseUrl.includes('/viewid=')) {
+                                const viewMatch = baseUrl.match(/\/viewid=([^\/]+)/);
+                                if (viewMatch) {
+                                    const viewId = viewMatch[1];
+                                    videoSrc = `https://onedrive.live.com/download.aspx?viewid=${viewId}`;
+                                }
                             } else {
                                 videoSrc = baseUrl + '?download=1';
                             }
@@ -617,16 +623,19 @@ async function playVideo(videoId) {
                 console.log('视频可以播放');
             };
             
-            // 尝试自动播放
-            const playPromise = videoPlayer.play();
-            if (playPromise !== undefined) {
-                playPromise.then(() => {
-                    console.log('自动播放成功');
-                }).catch(error => {
-                    console.log('自动播放失败，需要用户手动点击播放:', error);
-                    showMessage('请点击播放按钮开始播放', 'info');
-                });
-            }
+            // 延迟自动播放，避免被中断
+            setTimeout(() => {
+                const playPromise = videoPlayer.play();
+                if (playPromise !== undefined) {
+                    playPromise.then(() => {
+                        console.log('自动播放成功');
+                    }).catch(error => {
+                        console.log('自动播放失败，需要用户手动点击播放:', error);
+                        showMessage('请点击播放按钮开始播放', 'info');
+                    });
+                }
+            }, 1000);
+            
         } else {
             console.error('未找到视频播放器元素');
             showMessage('视频播放器加载失败', 'error');
@@ -833,6 +842,8 @@ async function handleUpload(e) {
         
         // 处理OneDrive链接 - 转换为直接下载链接
         if (videoUrl.includes('1drv.ms') || videoUrl.includes('onedrive.live.com')) {
+            console.log('原始OneDrive链接:', videoUrl);
+            
             // 移除任何现有的参数
             let baseUrl = videoUrl.split('?')[0];
             
@@ -853,8 +864,15 @@ async function handleUpload(e) {
                 } else if (baseUrl.includes('/embed/')) {
                     // 嵌入链接，转换为下载链接
                     processedUrl = baseUrl.replace('/embed/', '/redir?') + '&download=1';
+                } else if (baseUrl.includes('/viewid=')) {
+                    // 查看链接，转换为下载链接
+                    const viewMatch = baseUrl.match(/\/viewid=([^\/]+)/);
+                    if (viewMatch) {
+                        const viewId = viewMatch[1];
+                        processedUrl = `https://onedrive.live.com/download.aspx?viewid=${viewId}`;
+                    }
                 } else {
-                    // 其他格式，添加下载参数
+                    // 其他格式，尝试添加下载参数
                     processedUrl = baseUrl + '?download=1';
                 }
             }
