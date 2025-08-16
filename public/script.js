@@ -847,14 +847,16 @@ async function handleUpload(e) {
             // 处理1drv.ms链接
             if (videoUrl.includes('1drv.ms')) {
                 // 从1drv.ms链接中提取完整的文件ID
+                // 匹配 /v/ 后面的所有字符，直到遇到 / 或 ? 或字符串结束
                 const match = videoUrl.match(/\/v\/([^\/\?]+)/);
-                if (match) {
+                if (match && match[1] && match[1].length > 1) {
                     const fileId = match[1];
                     console.log('提取的文件ID:', fileId);
                     // 使用完整的文件ID创建下载链接
                     processedUrl = `https://onedrive.live.com/download.aspx?cid=${fileId}`;
                 } else {
-                    console.error('无法从1drv.ms链接中提取文件ID');
+                    console.error('无法从1drv.ms链接中提取有效的文件ID');
+                    console.error('匹配结果:', match);
                     showMessage('OneDrive链接格式不正确，请检查链接', 'error');
                     return;
                 }
