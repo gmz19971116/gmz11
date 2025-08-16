@@ -780,23 +780,37 @@ async function logout() {
     }
 }
 
-// 处理文件选择
-function handleFileSelect(e) {
-    const file = e.target.files[0];
-    const fileInfo = document.getElementById('uploadFileInfo');
-    
-    if (file) {
-        const size = (file.size / (1024 * 1024)).toFixed(2);
-        fileInfo.textContent = `文件名: ${file.name}, 大小: ${size} MB`;
-    } else {
-        fileInfo.textContent = '';
-    }
-}
-
 // 测试视频链接
 function testVideoLink(videoUrl) {
     document.getElementById('uploadVideoUrl').value = videoUrl;
     showMessage('已填入测试链接，请点击"上传视频"按钮测试', 'info');
+}
+
+// 处理本地文件选择
+function handleFileSelect(event) {
+    const file = event.target.files[0];
+    if (file) {
+        console.log('选择的文件:', file.name, file.size, file.type);
+        
+        // 显示文件名
+        const fileNameDisplay = document.getElementById('selectedFileName');
+        fileNameDisplay.textContent = `已选择: ${file.name} (${formatFileSize(file.size)})`;
+        fileNameDisplay.style.display = 'block';
+        
+        // 清空URL输入框
+        document.getElementById('uploadVideoUrl').value = '';
+        
+        showMessage(`已选择文件: ${file.name}`, 'info');
+    }
+}
+
+// 格式化文件大小
+function formatFileSize(bytes) {
+    if (bytes === 0) return '0 Bytes';
+    const k = 1024;
+    const sizes = ['Bytes', 'KB', 'MB', 'GB'];
+    const i = Math.floor(Math.log(bytes) / Math.log(k));
+    return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
 }
 
 // 处理视频上传
@@ -806,53 +820,77 @@ async function handleUpload(e) {
     const title = document.getElementById('uploadVideoTitle').value;
     const description = document.getElementById('uploadVideoDescription').value;
     const videoUrl = document.getElementById('uploadVideoUrl').value;
+    const videoFile = document.getElementById('uploadVideoFile').files[0];
     
     if (!title) {
         showMessage('请输入视频标题', 'error');
         return;
     }
     
-    if (!videoUrl) {
-        showMessage('请输入视频链接', 'error');
+    if (!videoUrl && !videoFile) {
+        showMessage('请选择视频文件或输入视频链接', 'error');
         return;
     }
     
     try {
-        let processedUrl = videoUrl;
+        let processedUrl = '';
+        let fileName = '';
         
-        // 处理不同类型的视频链接
-        if (videoUrl.includes('drive.google.com')) {
-            // Google Drive链接 - 简化处理
-            console.log('检测到Google Drive链接:', videoUrl);
-            showMessage('Google Drive链接可能无法直接播放，建议使用其他视频托管服务', 'warning');
-        } else if (videoUrl.includes('dropbox.com')) {
-            // Dropbox链接处理
-            if (videoUrl.includes('?dl=0')) {
-                // 将dl=0改为dl=1以支持直接下载
-                processedUrl = videoUrl.replace('?dl=0', '?dl=1');
-                console.log('处理Dropbox链接:', videoUrl, '->', processedUrl);
-            } else if (!videoUrl.includes('?dl=')) {
-                // 如果没有dl参数，添加dl=1
-                processedUrl = videoUrl + '?dl=1';
-                console.log('处理Dropbox链接:', videoUrl, '->', processedUrl);
+        if (videoFile) {
+            // 处理本地文件上传
+            console.log('处理本地文件上传:', videoFile.name);
+            
+            // 检查文件大小（限制为100MB）
+            const maxSize = 100 * 1024 * 1024; // 100MB
+            if (videoFile.size > maxSize) {
+                showMessage('文件大小不能超过100MB', 'error');
+                return;
             }
-        } else if (videoUrl.endsWith('.mp4') || videoUrl.endsWith('.webm') || videoUrl.endsWith('.ogg')) {
-            // 直接视频文件链接
-            console.log('使用直接视频链接:', videoUrl);
-        } else {
-            console.log('使用其他类型链接:', videoUrl);
+            
+            // 创建本地文件URL
+            processedUrl = URL.createObjectURL(videoFile);
+            fileName = videoFile.name;
+            
+            showMessage('本地文件已处理，注意：刷新页面后文件会丢失', 'warning');
+        } else if (videoUrl) {
+            // 处理在线视频链接
+            processedUrl = videoUrl;
+            fileName = 'external-video.mp4';
+            
+            // 处理不同类型的视频链接
+            if (videoUrl.includes('drive.google.com')) {
+                // Google Drive链接 - 简化处理
+                console.log('检测到Google Drive链接:', videoUrl);
+                showMessage('Google Drive链接可能无法直接播放，建议使用其他视频托管服务', 'warning');
+            } else if (videoUrl.includes('dropbox.com')) {
+                // Dropbox链接处理
+                if (videoUrl.includes('?dl=0')) {
+                    // 将dl=0改为dl=1以支持直接下载
+                    processedUrl = videoUrl.replace('?dl=0', '?dl=1');
+                    console.log('处理Dropbox链接:', videoUrl, '->', processedUrl);
+                } else if (!videoUrl.includes('?dl=')) {
+                    // 如果没有dl参数，添加dl=1
+                    processedUrl = videoUrl + '?dl=1';
+                    console.log('处理Dropbox链接:', videoUrl, '->', processedUrl);
+                }
+            } else if (videoUrl.endsWith('.mp4') || videoUrl.endsWith('.webm') || videoUrl.endsWith('.ogg')) {
+                // 直接视频文件链接
+                console.log('使用直接视频链接:', videoUrl);
+            } else {
+                console.log('使用其他类型链接:', videoUrl);
+            }
         }
         
         const newVideo = {
             id: Date.now(),
             title: title,
             description: description || '',
-            filename: 'external-video.mp4',
+            filename: fileName,
             filepath: processedUrl,
             videoUrl: processedUrl,
             thumbnail_path: null,
             duration: 0,
-            file_size: 0,
+            file_size: videoFile ? videoFile.size : 0,
             uploaded_by: currentUser ? currentUser.id : 1755168092284,
             uploader_name: currentUser ? currentUser.username : "admin",
             created_at: new Date().toISOString(),
@@ -874,6 +912,7 @@ async function handleUpload(e) {
         
         closeModal('uploadModal');
         document.getElementById('uploadForm').reset();
+        document.getElementById('selectedFileName').style.display = 'none';
         
     } catch (error) {
         console.error('上传失败:', error);

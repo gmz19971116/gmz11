@@ -186,7 +186,7 @@
                 
                 <div class="form-group">
                     <label>或者上传视频文件</label>
-                    <input type="file" id="uploadVideoFile" accept="video/*" style="display: none;">
+                    <input type="file" id="uploadVideoFile" accept="video/*" style="display: none;" onchange="handleFileSelect(event)">
                     <button type="button" class="btn btn-outline-primary" onclick="document.getElementById('uploadVideoFile').click()">
                         <i class="fas fa-upload"></i> 选择视频文件
                     </button>
