@@ -20,13 +20,28 @@ async function loadFromCloudDatabase() {
         videos = [
             {
                 id: 1,
-                title: "示例视频 1",
+                title: "示例视频 - Big Buck Bunny",
                 description: "这是一个示例视频，用于演示平台功能",
                 filename: "sample1.mp4",
-                filepath: "https://sample-videos.com/zip/10/mp4/SampleVideo_1280x720_1mb.mp4",
-                videoUrl: "https://sample-videos.com/zip/10/mp4/SampleVideo_1280x720_1mb.mp4",
+                filepath: "https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/BigBuckBunny.mp4",
+                videoUrl: "https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/BigBuckBunny.mp4",
                 thumbnail_path: null,
-                duration: 10,
+                duration: 596,
+                file_size: 1024000,
+                uploaded_by: 1755168092284,
+                uploader_name: "admin",
+                created_at: "2024-01-01T00:00:00.000Z",
+                updated_at: "2024-01-01T00:00:00.000Z"
+            },
+            {
+                id: 2,
+                title: "示例视频 - Elephants Dream",
+                description: "另一个示例视频，展示平台功能",
+                filename: "sample2.mp4",
+                filepath: "https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ElephantsDream.mp4",
+                videoUrl: "https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ElephantsDream.mp4",
+                thumbnail_path: null,
+                duration: 653,
                 file_size: 1024000,
                 uploaded_by: 1755168092284,
                 uploader_name: "admin",
@@ -50,7 +65,7 @@ async function loadFromCloudDatabase() {
             const data = await response.json();
             console.log('从云数据库加载成功:', data);
             
-            if (data.record && data.record.videos) {
+            if (data.record && data.record.videos && Array.isArray(data.record.videos)) {
                 videos = data.record.videos;
                 console.log('加载到', videos.length, '个视频');
                 return true;
@@ -59,13 +74,28 @@ async function loadFromCloudDatabase() {
                 videos = [
                     {
                         id: 1,
-                        title: "示例视频 1",
+                        title: "示例视频 - Big Buck Bunny",
                         description: "这是一个示例视频，用于演示平台功能",
                         filename: "sample1.mp4",
-                        filepath: "https://sample-videos.com/zip/10/mp4/SampleVideo_1280x720_1mb.mp4",
-                        videoUrl: "https://sample-videos.com/zip/10/mp4/SampleVideo_1280x720_1mb.mp4",
+                        filepath: "https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/BigBuckBunny.mp4",
+                        videoUrl: "https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/BigBuckBunny.mp4",
                         thumbnail_path: null,
-                        duration: 10,
+                        duration: 596,
+                        file_size: 1024000,
+                        uploaded_by: 1755168092284,
+                        uploader_name: "admin",
+                        created_at: "2024-01-01T00:00:00.000Z",
+                        updated_at: "2024-01-01T00:00:00.000Z"
+                    },
+                    {
+                        id: 2,
+                        title: "示例视频 - Elephants Dream",
+                        description: "另一个示例视频，展示平台功能",
+                        filename: "sample2.mp4",
+                        filepath: "https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ElephantsDream.mp4",
+                        videoUrl: "https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ElephantsDream.mp4",
+                        thumbnail_path: null,
+                        duration: 653,
                         file_size: 1024000,
                         uploaded_by: 1755168092284,
                         uploader_name: "admin",
@@ -81,13 +111,28 @@ async function loadFromCloudDatabase() {
             videos = [
                 {
                     id: 1,
-                    title: "示例视频 1",
+                    title: "示例视频 - Big Buck Bunny",
                     description: "这是一个示例视频，用于演示平台功能",
                     filename: "sample1.mp4",
-                    filepath: "https://sample-videos.com/zip/10/mp4/SampleVideo_1280x720_1mb.mp4",
-                    videoUrl: "https://sample-videos.com/zip/10/mp4/SampleVideo_1280x720_1mb.mp4",
+                    filepath: "https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/BigBuckBunny.mp4",
+                    videoUrl: "https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/BigBuckBunny.mp4",
                     thumbnail_path: null,
-                    duration: 10,
+                    duration: 596,
+                    file_size: 1024000,
+                    uploaded_by: 1755168092284,
+                    uploader_name: "admin",
+                    created_at: "2024-01-01T00:00:00.000Z",
+                    updated_at: "2024-01-01T00:00:00.000Z"
+                },
+                {
+                    id: 2,
+                    title: "示例视频 - Elephants Dream",
+                    description: "另一个示例视频，展示平台功能",
+                    filename: "sample2.mp4",
+                    filepath: "https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ElephantsDream.mp4",
+                    videoUrl: "https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ElephantsDream.mp4",
+                    thumbnail_path: null,
+                    duration: 653,
                     file_size: 1024000,
                     uploaded_by: 1755168092284,
                     uploader_name: "admin",
@@ -103,13 +148,28 @@ async function loadFromCloudDatabase() {
         videos = [
             {
                 id: 1,
-                title: "示例视频 1",
+                title: "示例视频 - Big Buck Bunny",
                 description: "这是一个示例视频，用于演示平台功能",
                 filename: "sample1.mp4",
-                filepath: "https://sample-videos.com/zip/10/mp4/SampleVideo_1280x720_1mb.mp4",
-                videoUrl: "https://sample-videos.com/zip/10/mp4/SampleVideo_1280x720_1mb.mp4",
+                filepath: "https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/BigBuckBunny.mp4",
+                videoUrl: "https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/BigBuckBunny.mp4",
                 thumbnail_path: null,
-                duration: 10,
+                duration: 596,
+                file_size: 1024000,
+                uploaded_by: 1755168092284,
+                uploader_name: "admin",
+                created_at: "2024-01-01T00:00:00.000Z",
+                updated_at: "2024-01-01T00:00:00.000Z"
+            },
+            {
+                id: 2,
+                title: "示例视频 - Elephants Dream",
+                description: "另一个示例视频，展示平台功能",
+                filename: "sample2.mp4",
+                filepath: "https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ElephantsDream.mp4",
+                videoUrl: "https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ElephantsDream.mp4",
+                thumbnail_path: null,
+                duration: 653,
                 file_size: 1024000,
                 uploaded_by: 1755168092284,
                 uploader_name: "admin",
@@ -533,17 +593,8 @@ async function playVideo(videoId) {
                     }
                 }
             } else {
-                // 使用更可靠的示例视频
-                const sampleVideos = [
-                    'https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/BigBuckBunny.mp4',
-                    'https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ElephantsDream.mp4',
-                    'https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerBlazes.mp4',
-                    'https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerEscapes.mp4',
-                    'https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerFun.mp4'
-                ];
-                
-                const videoIndex = videoId % sampleVideos.length;
-                videoSrc = sampleVideos[videoIndex];
+                // 使用Google的可靠示例视频
+                videoSrc = 'https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/BigBuckBunny.mp4';
                 console.log('使用示例视频:', videoSrc);
             }
             
