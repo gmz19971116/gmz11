@@ -664,4 +664,32 @@ body {
     font-size: 0.9rem;
 }
 
+/* 测试链接按钮样式 */
+.test-links {
+    margin-top: 10px;
+    display: flex;
+    gap: 10px;
+    flex-wrap: wrap;
+}
+
+.test-links .btn {
+    font-size: 12px;
+    padding: 5px 10px;
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    border: none;
+    color: white;
+    border-radius: 15px;
+    cursor: pointer;
+    transition: all 0.3s ease;
+}
+
+.test-links .btn:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 5px 15px rgba(102, 126, 234, 0.4);
+}
+
+.test-links .btn:active {
+    transform: translateY(0);
+}
+
 

@@ -166,14 +166,19 @@
                     <textarea id="uploadVideoDescription" name="description" rows="3" autocomplete="off"></textarea>
                 </div>
                 <div class="form-group">
-                    <label for="uploadVideoUrl">OneDrive视频链接</label>
-                    <input type="url" id="uploadVideoUrl" name="videoUrl" placeholder="https://1drv.ms/v/xxxxx 或 https://onedrive.live.com/..." autocomplete="off" required>
+                    <label for="uploadVideoUrl">视频链接</label>
+                    <input type="url" id="uploadVideoUrl" name="videoUrl" placeholder="请输入视频的直接播放链接" autocomplete="off" required>
                     <small>
-                        <strong>使用步骤：</strong><br>
-                        1. 将视频上传到OneDrive<br>
-                        2. 右键点击视频 → "分享" → "复制链接"<br>
-                        3. 粘贴链接到上面的输入框
+                        <strong>支持的视频链接格式：</strong><br>
+                        1. <strong>Google Drive</strong>: 将视频上传到Google Drive，右键"获取分享链接"，将链接中的"view"改为"preview"<br>
+                        2. <strong>Dropbox</strong>: 上传到Dropbox，右键"分享"，选择"创建链接"，将链接末尾的"?dl=0"改为"?dl=1"<br>
+                        3. <strong>直接视频链接</strong>: 任何以.mp4、.webm、.ogg结尾的直接视频文件链接<br>
+                        4. <strong>示例视频</strong>: 可以先用示例视频测试功能
                     </small>
+                    <div class="test-links">
+                        <button type="button" class="btn btn-secondary btn-sm" onclick="testVideoLink('https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/BigBuckBunny.mp4')">测试示例视频1</button>
+                        <button type="button" class="btn btn-secondary btn-sm" onclick="testVideoLink('https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ElephantsDream.mp4')">测试示例视频2</button>
+                    </div>
                 </div>
                 <button type="submit" class="btn btn-primary">上传视频</button>
             </form>

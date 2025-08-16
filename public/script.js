@@ -562,42 +562,7 @@ async function playVideo(videoId) {
             
             if (video.videoUrl) {
                 videoSrc = video.videoUrl;
-                console.log('使用外部视频URL:', videoSrc);
-                
-                // 检查是否是OneDrive链接，如果是，确保使用下载链接
-                if (videoSrc.includes('1drv.ms') || videoSrc.includes('onedrive.live.com')) {
-                    // 如果已经是处理过的下载链接，直接使用
-                    if (videoSrc.includes('download.aspx')) {
-                        console.log('使用已处理的OneDrive下载链接:', videoSrc);
-                    } else {
-                        // 需要重新处理链接
-                        console.log('重新处理OneDrive链接');
-                        
-                        if (videoSrc.includes('1drv.ms')) {
-                            const match = videoSrc.match(/\/v\/([^\/\?]+)/);
-                            if (match && match[1]) {
-                                const fileId = match[1];
-                                videoSrc = `https://onedrive.live.com/download.aspx?cid=${fileId}`;
-                            }
-                        } else if (videoSrc.includes('onedrive.live.com')) {
-                            if (videoSrc.includes('viewid=')) {
-                                const viewMatch = videoSrc.match(/viewid=([^&]+)/);
-                                if (viewMatch && viewMatch[1]) {
-                                    const viewId = viewMatch[1];
-                                    videoSrc = `https://onedrive.live.com/download.aspx?viewid=${viewId}`;
-                                }
-                            } else if (videoSrc.includes('/redir?')) {
-                                videoSrc = videoSrc + '&download=1';
-                            } else if (videoSrc.includes('/embed/')) {
-                                videoSrc = videoSrc.replace('/embed/', '/redir?') + '&download=1';
-                            } else {
-                                videoSrc = videoSrc + '?download=1';
-                            }
-                        }
-                        
-                        console.log('重新处理OneDrive链接:', videoSrc);
-                    }
-                }
+                console.log('使用视频URL:', videoSrc);
             } else {
                 // 使用Google的可靠示例视频
                 videoSrc = 'https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/BigBuckBunny.mp4';
@@ -812,6 +777,12 @@ function handleFileSelect(e) {
     }
 }
 
+// 测试视频链接
+function testVideoLink(videoUrl) {
+    document.getElementById('uploadVideoUrl').value = videoUrl;
+    showMessage('已填入测试链接，请点击"上传视频"按钮测试', 'info');
+}
+
 // 处理视频上传
 async function handleUpload(e) {
     e.preventDefault();
@@ -833,57 +804,36 @@ async function handleUpload(e) {
     try {
         let processedUrl = videoUrl;
         
-        // 处理OneDrive链接 - 转换为直接下载链接
-        if (videoUrl.includes('1drv.ms') || videoUrl.includes('onedrive.live.com')) {
-            console.log('原始OneDrive链接:', videoUrl);
-            
-            // 处理1drv.ms链接
-            if (videoUrl.includes('1drv.ms')) {
-                // 从1drv.ms链接中提取文件ID
-                const match = videoUrl.match(/\/v\/([^\/\?]+)/);
-                if (match && match[1]) {
-                    const fileId = match[1];
-                    console.log('提取的文件ID:', fileId);
-                    // 转换为直接下载链接
-                    processedUrl = `https://onedrive.live.com/download.aspx?cid=${fileId}`;
-                } else {
-                    console.error('无法从1drv.ms链接中提取文件ID');
-                    showMessage('OneDrive链接格式不正确，请检查链接', 'error');
-                    return;
-                }
-            } else if (videoUrl.includes('onedrive.live.com')) {
-                // 处理onedrive.live.com链接
-                if (videoUrl.includes('viewid=')) {
-                    // 查看链接，转换为下载链接
-                    const viewMatch = videoUrl.match(/viewid=([^&]+)/);
-                    if (viewMatch && viewMatch[1]) {
-                        const viewId = viewMatch[1];
-                        console.log('提取的viewid:', viewId);
-                        processedUrl = `https://onedrive.live.com/download.aspx?viewid=${viewId}`;
-                    } else {
-                        // 如果无法提取viewid，尝试添加下载参数
-                        processedUrl = videoUrl + '&download=1';
-                    }
-                } else if (videoUrl.includes('/redir?')) {
-                    // 已经是重定向链接，添加下载参数
-                    processedUrl = videoUrl + '&download=1';
-                } else if (videoUrl.includes('/embed/')) {
-                    // 嵌入链接，转换为下载链接
-                    processedUrl = videoUrl.replace('/embed/', '/redir?') + '&download=1';
-                } else {
-                    // 其他格式，尝试添加下载参数
-                    processedUrl = videoUrl + '?download=1';
-                }
+        // 处理不同类型的视频链接
+        if (videoUrl.includes('drive.google.com')) {
+            // Google Drive链接处理
+            if (videoUrl.includes('/view')) {
+                // 将view改为preview以支持直接播放
+                processedUrl = videoUrl.replace('/view', '/preview');
+                console.log('处理Google Drive链接:', videoUrl, '->', processedUrl);
             }
-            
-            console.log('处理OneDrive链接:', videoUrl, '->', processedUrl);
+        } else if (videoUrl.includes('dropbox.com')) {
+            // Dropbox链接处理
+            if (videoUrl.includes('?dl=0')) {
+                // 将dl=0改为dl=1以支持直接下载
+                processedUrl = videoUrl.replace('?dl=0', '?dl=1');
+                console.log('处理Dropbox链接:', videoUrl, '->', processedUrl);
+            } else if (!videoUrl.includes('?dl=')) {
+                // 如果没有dl参数，添加dl=1
+                processedUrl = videoUrl + '?dl=1';
+                console.log('处理Dropbox链接:', videoUrl, '->', processedUrl);
+            }
+        } else if (videoUrl.includes('1drv.ms') || videoUrl.includes('onedrive.live.com')) {
+            // OneDrive链接 - 简化处理，直接使用原始链接
+            console.log('使用OneDrive链接:', videoUrl);
+            showMessage('OneDrive链接可能需要特殊处理，如果无法播放请尝试其他视频托管服务', 'warning');
         }
         
         const newVideo = {
             id: Date.now(),
             title: title,
             description: description || '',
-            filename: 'onedrive-video.mp4',
+            filename: 'external-video.mp4',
             filepath: processedUrl,
             videoUrl: processedUrl,
             thumbnail_path: null,
