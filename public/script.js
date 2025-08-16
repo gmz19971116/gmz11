@@ -533,11 +533,13 @@ async function playVideo(videoId) {
                     }
                 }
             } else {
-                // 使用示例视频
+                // 使用更可靠的示例视频
                 const sampleVideos = [
-                    'https://sample-videos.com/zip/10/mp4/SampleVideo_1280x720_1mb.mp4',
                     'https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/BigBuckBunny.mp4',
-                    'https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ElephantsDream.mp4'
+                    'https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ElephantsDream.mp4',
+                    'https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerBlazes.mp4',
+                    'https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerEscapes.mp4',
+                    'https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerFun.mp4'
                 ];
                 
                 const videoIndex = videoId % sampleVideos.length;
@@ -545,14 +547,38 @@ async function playVideo(videoId) {
                 console.log('使用示例视频:', videoSrc);
             }
             
+            // 设置视频源
             videoSource.src = videoSrc;
             videoPlayer.load();
             console.log('视频源已设置:', videoSource.src);
             
-            videoPlayer.play().catch(error => {
-                console.log('自动播放失败，需要用户手动点击播放:', error);
-                showMessage('请点击播放按钮开始播放', 'info');
-            });
+            // 添加错误处理
+            videoPlayer.onerror = function() {
+                console.error('视频加载失败:', videoSrc);
+                showMessage('视频加载失败，请检查链接或稍后重试', 'error');
+            };
+            
+            videoPlayer.onloadstart = function() {
+                console.log('开始加载视频');
+            };
+            
+            videoPlayer.oncanplay = function() {
+                console.log('视频可以播放');
+            };
+            
+            // 尝试自动播放
+            const playPromise = videoPlayer.play();
+            if (playPromise !== undefined) {
+                playPromise.then(() => {
+                    console.log('自动播放成功');
+                }).catch(error => {
+                    console.log('自动播放失败，需要用户手动点击播放:', error);
+                    showMessage('请点击播放按钮开始播放', 'info');
+                });
+            }
+        } else {
+            console.error('未找到视频播放器元素');
+            showMessage('视频播放器加载失败', 'error');
         }
         
     } catch (error) {

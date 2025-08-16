@@ -85,7 +85,14 @@ app.get('/script.js', (req, res) => {
 });
 
 app.get('/favicon.ico', (req, res) => {
-    res.sendFile(path.join(__dirname, 'public', 'favicon.ico'));
+    // 如果favicon文件不存在，返回204状态码（无内容）
+    const faviconPath = path.join(__dirname, 'public', 'favicon.ico');
+    if (fs.existsSync(faviconPath)) {
+        res.sendFile(faviconPath);
+    } else {
+        // 返回204状态码，表示无内容但成功
+        res.status(204).end();
+    }
 });
 
 app.use(express.static(path.join(__dirname, 'public')));
