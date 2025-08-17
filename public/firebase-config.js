@@ -1,14 +1,15 @@
 // Firebase配置和认证功能
-// 请将以下配置替换为你的Firebase项目配置
+// 你的Firebase项目配置
 
 // Firebase配置
 const firebaseConfig = {
-    apiKey: "your-api-key",
-    authDomain: "your-project.firebaseapp.com",
-    projectId: "your-project-id",
-    storageBucket: "your-project.appspot.com",
-    messagingSenderId: "your-sender-id",
-    appId: "your-app-id"
+    apiKey: "AIzaSyA1fYg3CYGUI1ufiVsqFwTn675LA01Itec",
+    authDomain: "zhuce-and-denglu-c71ca.firebaseapp.com",
+    projectId: "zhuce-and-denglu-c71ca",
+    storageBucket: "zhuce-and-denglu-c71ca.firebasestorage.app",
+    messagingSenderId: "41297412217",
+    appId: "1:41297412217:web:8b250fa2230edce367d4a8",
+    measurementId: "G-VPL2RTVYF5"
 };
 
 // 初始化Firebase
