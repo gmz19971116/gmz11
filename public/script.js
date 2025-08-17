@@ -394,8 +394,8 @@ function updateUIForLoggedInUser() {
     document.getElementById('userMenu').style.display = 'flex';
     document.getElementById('username').textContent = currentUser.displayName || currentUser.email;
     
-    const isAdmin = currentUser.is_admin || currentUser.isAdmin;
-    console.log('用户权限检查 - is_admin:', currentUser.is_admin, 'isAdmin:', currentUser.isAdmin, '最终结果:', isAdmin);
+    const isAdmin = currentUser.is_admin;
+    console.log('用户权限检查 - is_admin:', currentUser.is_admin, '最终结果:', isAdmin);
     
     const adminMenu = document.getElementById('adminMenu');
     if (adminMenu) {
@@ -491,7 +491,7 @@ function createVideoCard(video) {
     const duration = formatDuration(video.duration);
     const uploadDate = formatDate(video.created_at);
     
-    const isAdmin = currentUser && (currentUser.is_admin || currentUser.isAdmin);
+    const isAdmin = currentUser && currentUser.is_admin;
     
     card.innerHTML = `
         <div class="video-thumbnail">
@@ -1071,7 +1071,7 @@ async function handleUpload(e) {
 // 删除视频
 async function deleteVideo(videoId) {
     // 检查是否为管理员
-    if (!currentUser || !(currentUser.is_admin || currentUser.isAdmin)) {
+    if (!currentUser || !currentUser.is_admin) {
         showMessage('只有管理员才能删除视频', 'error');
         return;
     }

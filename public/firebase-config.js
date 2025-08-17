@@ -47,8 +47,8 @@ function handleUserLogin(user) {
             username.textContent = user.displayName || user.email;
         }
         
-        // 检查是否为管理员（可以根据邮箱或其他条件判断）
-        if (user.email === 'admin@example.com' || user.email.endsWith('@admin.com')) {
+        // 检查是否为管理员（只有特定邮箱拥有管理员权限）
+        if (user.email === 'admin@example.com') {
             if (adminMenu) {
                 adminMenu.style.display = 'flex';
             }
@@ -61,7 +61,7 @@ function handleUserLogin(user) {
         email: user.email,
         displayName: user.displayName,
         photoURL: user.photoURL,
-        is_admin: user.email === 'admin@example.com' || user.email.endsWith('@admin.com')
+        is_admin: user.email === 'admin@example.com'
     }));
     
     // 关闭登录模态框
