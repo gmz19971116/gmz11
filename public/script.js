@@ -530,6 +530,18 @@ function createVideoCard(video) {
 async function playVideo(videoId) {
     console.log('尝试播放视频:', videoId);
     
+    // 清理之前的iframe播放器
+    const existingIframe = document.querySelector('.video-player iframe');
+    if (existingIframe) {
+        existingIframe.remove();
+    }
+    
+    // 恢复原生video元素显示
+    const videoPlayer = document.getElementById('videoPlayer');
+    if (videoPlayer) {
+        videoPlayer.style.display = 'block';
+    }
+    
     try {
         const video = videos.find(v => v.id == videoId);
         
@@ -572,14 +584,32 @@ async function playVideo(videoId) {
                 
                 // 特殊处理Google Drive链接
                 if (videoSrc.includes('drive.google.com')) {
-                    console.log('检测到Google Drive链接，尝试优化播放');
+                    console.log('检测到Google Drive链接，使用iframe播放器');
                     
                     const driveValidation = validateGoogleDriveLink(videoSrc);
                     
                     if (driveValidation.isValid) {
-                        // 使用Google Drive的下载格式
-                        videoSrc = `https://drive.google.com/uc?export=download&id=${driveValidation.fileId}`;
-                        console.log('转换为Google Drive下载链接:', videoSrc);
+                        const fileId = driveValidation.fileId;
+                        
+                        // 隐藏原生video元素
+                        videoPlayer.style.display = 'none';
+                        
+                        // 创建iframe播放器
+                        const iframePlayer = document.createElement('iframe');
+                        iframePlayer.src = `https://drive.google.com/file/d/${fileId}/preview`;
+                        iframePlayer.width = '100%';
+                        iframePlayer.height = '400';
+                        iframePlayer.style.border = 'none';
+                        iframePlayer.style.borderRadius = '8px';
+                        iframePlayer.allowFullscreen = true;
+                        
+                        // 将iframe插入到video元素的位置
+                        const videoContainer = videoPlayer.parentElement;
+                        videoContainer.insertBefore(iframePlayer, videoPlayer);
+                        
+                        console.log('Google Drive iframe播放器已创建:', iframePlayer.src);
+                        showMessage('Google Drive视频已加载，请使用iframe播放器观看', 'info');
+                        return; // 跳过原生video处理
                     } else {
                         console.error('Google Drive链接无效:', driveValidation.message);
                         showMessage(driveValidation.message, 'error');
@@ -705,7 +735,9 @@ function showUploadModal() {
                     2. 选择"获取链接"或"分享"<br>
                     3. 复制链接格式：https://drive.google.com/file/d/文件ID/view<br>
                     4. 确保文件已设置为"任何人都可以查看"<br>
-                    <em>❌ 不要使用主页链接或文件夹链接</em>
+                    5. 系统将使用iframe播放器播放Google Drive视频<br>
+                    <em>❌ 不要使用主页链接或文件夹链接</em><br>
+                    <em>⚠️ Google Drive视频使用嵌入式播放器，可能需要几秒钟加载</em>
                 </div>
             `;
         }
