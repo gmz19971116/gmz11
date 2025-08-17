@@ -574,15 +574,16 @@ async function playVideo(videoId) {
                 if (videoSrc.includes('drive.google.com')) {
                     console.log('检测到Google Drive链接，尝试优化播放');
                     
-                    // 如果是Google Drive链接，尝试转换为更兼容的格式
-                    if (videoSrc.includes('/file/d/')) {
-                        const fileIdMatch = videoSrc.match(/\/file\/d\/([^\/]+)/);
-                        if (fileIdMatch && fileIdMatch[1]) {
-                            const fileId = fileIdMatch[1];
-                            // 使用Google Drive的嵌入格式
-                            videoSrc = `https://drive.google.com/uc?export=download&id=${fileId}`;
-                            console.log('转换为Google Drive下载链接:', videoSrc);
-                        }
+                    const driveValidation = validateGoogleDriveLink(videoSrc);
+                    
+                    if (driveValidation.isValid) {
+                        // 使用Google Drive的下载格式
+                        videoSrc = `https://drive.google.com/uc?export=download&id=${driveValidation.fileId}`;
+                        console.log('转换为Google Drive下载链接:', videoSrc);
+                    } else {
+                        console.error('Google Drive链接无效:', driveValidation.message);
+                        showMessage(driveValidation.message, 'error');
+                        return;
                     }
                 }
             } else {
@@ -649,11 +650,65 @@ function searchVideos() {
     displayVideos(filteredVideos);
 }
 
+// 验证Google Drive链接格式
+function validateGoogleDriveLink(url) {
+    // 检查是否为有效的Google Drive文件链接
+    const filePattern = /https:\/\/drive\.google\.com\/file\/d\/([a-zA-Z0-9_-]+)/;
+    const match = url.match(filePattern);
+    
+    if (match) {
+        return {
+            isValid: true,
+            fileId: match[1],
+            type: 'file'
+        };
+    }
+    
+    // 检查是否为文件夹链接
+    if (url.includes('/drive/folders/')) {
+        return {
+            isValid: false,
+            type: 'folder',
+            message: '这是文件夹链接，请使用具体文件的链接'
+        };
+    }
+    
+    // 检查是否为主页链接
+    if (url.includes('/drive/home')) {
+        return {
+            isValid: false,
+            type: 'home',
+            message: '这是Google Drive主页链接，请使用具体文件的链接'
+        };
+    }
+    
+    return {
+        isValid: false,
+        type: 'unknown',
+        message: 'Google Drive链接格式不正确'
+    };
+}
+
 // 显示上传视频模态框
 function showUploadModal() {
     const modal = document.getElementById('uploadModal');
     if (modal) {
         modal.style.display = 'block';
+        
+        // 添加Google Drive链接帮助信息
+        const helpText = document.getElementById('googleDriveHelp');
+        if (helpText) {
+            helpText.innerHTML = `
+                <div style="background: #f0f8ff; padding: 10px; border-radius: 5px; margin: 10px 0; font-size: 12px;">
+                    <strong>💡 Google Drive链接使用说明：</strong><br>
+                    1. 右键点击Google Drive中的视频文件<br>
+                    2. 选择"获取链接"或"分享"<br>
+                    3. 复制链接格式：https://drive.google.com/file/d/文件ID/view<br>
+                    4. 确保文件已设置为"任何人都可以查看"<br>
+                    <em>❌ 不要使用主页链接或文件夹链接</em>
+                </div>
+            `;
+        }
     } else {
         showMessage('上传功能暂时不可用', 'error');
     }
@@ -870,9 +925,16 @@ async function handleUpload(e) {
             
             // 处理不同类型的视频链接
             if (videoUrl.includes('drive.google.com')) {
-                // Google Drive链接 - 简化处理
-                console.log('检测到Google Drive链接:', videoUrl);
-                showMessage('Google Drive链接可能无法直接播放，建议使用其他视频托管服务', 'warning');
+                const driveValidation = validateGoogleDriveLink(videoUrl);
+                
+                if (driveValidation.isValid) {
+                    console.log('检测到有效的Google Drive文件链接:', videoUrl);
+                    showMessage('Google Drive文件链接已识别，将尝试优化播放', 'info');
+                } else {
+                    console.log('检测到无效的Google Drive链接:', videoUrl, driveValidation.message);
+                    showMessage(driveValidation.message, 'error');
+                    return; // 阻止上传无效链接
+                }
             } else if (videoUrl.includes('dropbox.com')) {
                 // Dropbox链接处理
                 if (videoUrl.includes('?dl=0')) {
