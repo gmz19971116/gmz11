@@ -350,33 +350,35 @@ function setupEventListeners() {
     });
 }
 
-// 检查认证状态
+// 检查认证状态（Firebase版本）
 async function checkAuthStatus() {
     try {
-        if (currentUser) {
+        // 检查Firebase认证状态
+        const firebaseUser = FirebaseAuth.getCurrentUser();
+        
+        if (firebaseUser) {
+            // 用户已通过Firebase认证
+            currentUser = {
+                id: firebaseUser.uid,
+                email: firebaseUser.email,
+                username: firebaseUser.displayName || firebaseUser.email,
+                displayName: firebaseUser.displayName,
+                photoURL: firebaseUser.photoURL,
+                is_admin: firebaseUser.email === 'admin@example.com' || firebaseUser.email.endsWith('@admin.com')
+            };
+            
             updateUIForLoggedInUser();
             loadVideos();
-            return;
-        }
-        
-        const response = await fetch('/api/auth/status', {
-            method: 'GET',
-            headers: {
-                'Content-Type': 'application/json'
-            }
-        });
-        
-        if (response.ok) {
-            const data = await response.json();
-            if (data.authenticated && data.user) {
-                currentUser = data.user;
+        } else {
+            // 检查本地存储的用户信息
+            const storedUser = localStorage.getItem('currentUser');
+            if (storedUser) {
+                currentUser = JSON.parse(storedUser);
                 updateUIForLoggedInUser();
                 loadVideos();
             } else {
                 updateUIForLoggedOutUser();
             }
-        } else {
-            updateUIForLoggedOutUser();
         }
     } catch (error) {
         console.error('检查认证状态失败:', error);
@@ -384,13 +386,13 @@ async function checkAuthStatus() {
     }
 }
 
-// 更新UI为已登录状态
+// 更新UI为已登录状态（Firebase版本）
 function updateUIForLoggedInUser() {
     console.log('更新UI为已登录状态:', currentUser);
     
     document.getElementById('authButtons').style.display = 'none';
     document.getElementById('userMenu').style.display = 'flex';
-    document.getElementById('username').textContent = currentUser.username;
+    document.getElementById('username').textContent = currentUser.displayName || currentUser.email;
     
     const isAdmin = currentUser.is_admin || currentUser.isAdmin;
     console.log('用户权限检查 - is_admin:', currentUser.is_admin, 'isAdmin:', currentUser.isAdmin, '最终结果:', isAdmin);
@@ -399,7 +401,7 @@ function updateUIForLoggedInUser() {
     if (adminMenu) {
         console.log('找到adminMenu元素，用户isAdmin:', isAdmin);
         if (isAdmin) {
-            adminMenu.style.display = 'block';
+            adminMenu.style.display = 'flex';
             console.log('显示管理员菜单');
         } else {
             adminMenu.style.display = 'none';
@@ -762,50 +764,34 @@ function showRegisterModal() {
     }
 }
 
-// 处理登录
-async function handleLogin(e) {
-    e.preventDefault();
+// Firebase登录处理
+async function handleFirebaseLogin(event) {
+    event.preventDefault();
     
-    const username = document.getElementById('loginUsername').value;
+    const email = document.getElementById('loginEmail').value;
     const password = document.getElementById('loginPassword').value;
     
     try {
-        const response = await fetch('/api/auth/login', {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json'
-            },
-            body: JSON.stringify({
-                username: username,
-                password: password
-            }),
-            credentials: 'include'
-        });
+        showMessage('正在登录...', 'info');
         
-        // 检查响应类型
-        const contentType = response.headers.get('content-type');
-        if (!contentType || !contentType.includes('application/json')) {
-            console.error('服务器返回非JSON响应:', await response.text());
-            showMessage('服务器配置错误，请稍后重试', 'error');
-            return;
-        }
+        const result = await FirebaseAuth.loginWithEmail(email, password);
         
-        const data = await response.json();
-        console.log('登录响应数据:', data);
-        
-        if (response.ok) {
-            showMessage('登录成功', 'success');
-            closeModal('loginModal');
-            
-            // 直接设置用户状态
-            if (data.user) {
-                currentUser = data.user;
-                console.log('设置当前用户:', currentUser);
-                updateUIForLoggedInUser();
-                loadVideos(); // 加载视频列表
-            }
+        if (result.success) {
+            showMessage('登录成功！', 'success');
+            loadVideos(); // 加载视频列表
         } else {
-            showMessage(data.error || '登录失败', 'error');
+            // 处理常见错误
+            let errorMessage = '登录失败';
+            if (result.error.includes('user-not-found')) {
+                errorMessage = '用户不存在，请先注册';
+            } else if (result.error.includes('wrong-password')) {
+                errorMessage = '密码错误';
+            } else if (result.error.includes('invalid-email')) {
+                errorMessage = '邮箱格式不正确';
+            } else if (result.error.includes('too-many-requests')) {
+                errorMessage = '登录尝试次数过多，请稍后再试';
+            }
+            showMessage(errorMessage, 'error');
         }
     } catch (error) {
         console.error('登录失败:', error);
@@ -813,35 +799,71 @@ async function handleLogin(e) {
     }
 }
 
-// 处理注册
-async function handleRegister(e) {
-    e.preventDefault();
+// Google登录处理
+async function handleGoogleLogin() {
+    try {
+        showMessage('正在使用Google登录...', 'info');
+        
+        const result = await FirebaseAuth.loginWithGoogle();
+        
+        if (result.success) {
+            showMessage('Google登录成功！', 'success');
+            loadVideos(); // 加载视频列表
+        } else {
+            showMessage('Google登录失败，请稍后重试', 'error');
+        }
+    } catch (error) {
+        console.error('Google登录失败:', error);
+        showMessage('Google登录失败，请稍后重试', 'error');
+    }
+}
+
+// 匿名登录处理
+async function handleAnonymousLogin() {
+    try {
+        showMessage('正在创建匿名账户...', 'info');
+        
+        const result = await FirebaseAuth.loginAnonymously();
+        
+        if (result.success) {
+            showMessage('匿名登录成功！', 'success');
+            loadVideos(); // 加载视频列表
+        } else {
+            showMessage('匿名登录失败，请稍后重试', 'error');
+        }
+    } catch (error) {
+        console.error('匿名登录失败:', error);
+        showMessage('匿名登录失败，请稍后重试', 'error');
+    }
+}
+
+// Firebase注册处理
+async function handleFirebaseRegister(event) {
+    event.preventDefault();
     
-    const username = document.getElementById('registerUsername').value;
+    const displayName = document.getElementById('registerDisplayName').value;
     const email = document.getElementById('registerEmail').value;
     const password = document.getElementById('registerPassword').value;
     
     try {
-        const response = await fetch('/api/auth/register', {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json'
-            },
-            body: JSON.stringify({
-                username: username,
-                email: email,
-                password: password
-            })
-        });
+        showMessage('正在注册...', 'info');
         
-        const data = await response.json();
+        const result = await FirebaseAuth.registerWithEmail(email, password, displayName);
         
-        if (response.ok) {
-            showMessage('注册成功', 'success');
-            closeModal('registerModal');
-            checkAuthStatus();
+        if (result.success) {
+            showMessage('注册成功！请检查邮箱验证', 'success');
+            loadVideos(); // 加载视频列表
         } else {
-            showMessage(data.error || '注册失败', 'error');
+            // 处理常见错误
+            let errorMessage = '注册失败';
+            if (result.error.includes('email-already-in-use')) {
+                errorMessage = '该邮箱已被注册';
+            } else if (result.error.includes('weak-password')) {
+                errorMessage = '密码强度不够，请使用至少6位字符';
+            } else if (result.error.includes('invalid-email')) {
+                errorMessage = '邮箱格式不正确';
+            }
+            showMessage(errorMessage, 'error');
         }
     } catch (error) {
         console.error('注册失败:', error);
@@ -849,32 +871,53 @@ async function handleRegister(e) {
     }
 }
 
-// 退出登录
-async function logout() {
+// 忘记密码处理
+async function handleForgotPassword(event) {
+    event.preventDefault();
+    
+    const email = document.getElementById('forgotPasswordEmail').value;
+    
     try {
-        const response = await fetch('/api/auth/logout', {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json'
-            }
-        });
+        showMessage('正在发送重置链接...', 'info');
         
-        if (response.ok) {
-            currentUser = null;
-            updateUIForLoggedOutUser();
-            showMessage('退出登录成功', 'success');
+        const result = await FirebaseAuth.resetPassword(email);
+        
+        if (result.success) {
+            showMessage('密码重置链接已发送到您的邮箱', 'success');
+            closeModal('forgotPasswordModal');
         } else {
-            // 即使API失败，也清除本地状态
-            currentUser = null;
-            updateUIForLoggedOutUser();
-            showMessage('退出登录成功', 'success');
+            showMessage('发送失败，请检查邮箱地址', 'error');
         }
     } catch (error) {
-        console.error('退出登录失败:', error);
-        // 即使出错，也清除本地状态
-        currentUser = null;
-        updateUIForLoggedOutUser();
-        showMessage('退出登录成功', 'success');
+        console.error('密码重置失败:', error);
+        showMessage('密码重置失败，请稍后重试', 'error');
+    }
+}
+
+// 显示忘记密码模态框
+function showForgotPasswordModal() {
+    closeModal('loginModal');
+    const modal = document.getElementById('forgotPasswordModal');
+    if (modal) {
+        modal.style.display = 'block';
+    }
+}
+
+// Firebase退出登录
+async function logout() {
+    try {
+        const result = await FirebaseAuth.logout();
+        
+        if (result.success) {
+            showMessage('已成功登出', 'info');
+            // 重新加载页面以清除所有状态
+            window.location.reload();
+        } else {
+            showMessage('登出失败，请稍后重试', 'error');
+        }
+    } catch (error) {
+        console.error('登出失败:', error);
+        showMessage('登出失败，请稍后重试', 'error');
     }
 }
 
