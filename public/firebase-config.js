@@ -48,7 +48,7 @@ function handleUserLogin(user) {
         }
         
         // 检查是否为管理员（只有特定邮箱拥有管理员权限）
-        if (user.email === 'admin@example.com') {
+        if (user.email === '1348155504@qq.com') {
             if (adminMenu) {
                 adminMenu.style.display = 'flex';
             }
@@ -61,7 +61,7 @@ function handleUserLogin(user) {
         email: user.email,
         displayName: user.displayName,
         photoURL: user.photoURL,
-        is_admin: user.email === 'admin@example.com'
+        is_admin: user.email === '1348155504@qq.com'
     }));
     
     // 关闭登录模态框
