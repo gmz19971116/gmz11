@@ -24,10 +24,24 @@ auth.onAuthStateChanged((user) => {
         // 用户已登录
         console.log('用户已登录:', user.email);
         handleUserLogin(user);
+        
+        // 同步更新script.js中的用户状态
+        if (typeof checkAuthStatus === 'function') {
+            setTimeout(() => {
+                checkAuthStatus();
+            }, 100);
+        }
     } else {
         // 用户已登出
         console.log('用户已登出');
         handleUserLogout();
+        
+        // 同步更新script.js中的用户状态
+        if (typeof checkAuthStatus === 'function') {
+            setTimeout(() => {
+                checkAuthStatus();
+            }, 100);
+        }
     }
 });
 

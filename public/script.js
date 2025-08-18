@@ -450,7 +450,7 @@ async function checkAuthStatus() {
                 username: firebaseUser.displayName || firebaseUser.email,
                 displayName: firebaseUser.displayName,
                 photoURL: firebaseUser.photoURL,
-                is_admin: firebaseUser.email === 'admin@example.com' || firebaseUser.email.endsWith('@admin.com')
+                is_admin: firebaseUser.email === '1348155504@qq.com'
             };
             
             updateUIForLoggedInUser();
