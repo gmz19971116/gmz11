@@ -23,7 +23,7 @@ const memoryDB = {
     {
       id: 1755168092284,
       username: "admin",
-      email: "admin@example.com",
+      email: "1348155504@qq.com",
       password: "$2a$10$CGRQMkTVhwmlm.be04ObveT8CVxp4AyNUvAXu3xSJWOCLCv20WOOy",
       is_admin: true,
       created_at: "2025-08-14T10:41:32.284Z",

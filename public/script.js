@@ -13,42 +13,58 @@ const JSONBIN_CONFIG = {
 async function loadFromCloudDatabase() {
     console.log('开始从云数据库加载数据...');
     
+    // 首先尝试从本地存储加载数据作为备份
+    const localVideos = localStorage.getItem('localVideos');
+    if (localVideos) {
+        try {
+            const parsedVideos = JSON.parse(localVideos);
+            if (Array.isArray(parsedVideos) && parsedVideos.length > 0) {
+                videos = parsedVideos;
+                console.log('从本地存储加载了', videos.length, '个视频');
+            }
+        } catch (error) {
+            console.error('解析本地存储数据失败:', error);
+        }
+    }
+    
     // 检查配置是否完整
     if (!JSONBIN_CONFIG.BIN_ID || !JSONBIN_CONFIG.API_KEY) {
         console.log('JSONBin.io未配置，使用默认数据');
         // 使用默认示例视频
-        videos = [
-            {
-                id: 1,
-                title: "示例视频 - Big Buck Bunny",
-                description: "这是一个示例视频，用于演示平台功能",
-                filename: "sample1.mp4",
-                filepath: "https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/BigBuckBunny.mp4",
-                videoUrl: "https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/BigBuckBunny.mp4",
-                thumbnail_path: null,
-                duration: 596,
-                file_size: 1024000,
-                uploaded_by: 1755168092284,
-                uploader_name: "admin",
-                created_at: "2024-01-01T00:00:00.000Z",
-                updated_at: "2024-01-01T00:00:00.000Z"
-            },
-            {
-                id: 2,
-                title: "示例视频 - Elephants Dream",
-                description: "另一个示例视频，展示平台功能",
-                filename: "sample2.mp4",
-                filepath: "https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ElephantsDream.mp4",
-                videoUrl: "https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ElephantsDream.mp4",
-                thumbnail_path: null,
-                duration: 653,
-                file_size: 1024000,
-                uploaded_by: 1755168092284,
-                uploader_name: "admin",
-                created_at: "2024-01-01T00:00:00.000Z",
-                updated_at: "2024-01-01T00:00:00.000Z"
-            }
-        ];
+        if (!videos || videos.length === 0) {
+            videos = [
+                {
+                    id: 1,
+                    title: "示例视频 - Big Buck Bunny",
+                    description: "这是一个示例视频，用于演示平台功能",
+                    filename: "sample1.mp4",
+                    filepath: "https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/BigBuckBunny.mp4",
+                    videoUrl: "https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/BigBuckBunny.mp4",
+                    thumbnail_path: null,
+                    duration: 596,
+                    file_size: 1024000,
+                    uploaded_by: 1755168092284,
+                    uploader_name: "admin",
+                    created_at: "2024-01-01T00:00:00.000Z",
+                    updated_at: "2024-01-01T00:00:00.000Z"
+                },
+                {
+                    id: 2,
+                    title: "示例视频 - Elephants Dream",
+                    description: "另一个示例视频，展示平台功能",
+                    filename: "sample2.mp4",
+                    filepath: "https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ElephantsDream.mp4",
+                    videoUrl: "https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ElephantsDream.mp4",
+                    thumbnail_path: null,
+                    duration: 653,
+                    file_size: 1024000,
+                    uploaded_by: 1755168092284,
+                    uploader_name: "admin",
+                    created_at: "2024-01-01T00:00:00.000Z",
+                    updated_at: "2024-01-01T00:00:00.000Z"
+                }
+            ];
+        }
         return false;
     }
     
@@ -68,41 +84,48 @@ async function loadFromCloudDatabase() {
             if (data.record && data.record.videos && Array.isArray(data.record.videos)) {
                 videos = data.record.videos;
                 console.log('加载到', videos.length, '个视频');
+                
+                // 同时保存到本地存储作为备份
+                localStorage.setItem('localVideos', JSON.stringify(videos));
+                console.log('数据已备份到本地存储');
+                
                 return true;
             } else {
                 console.log('云数据库中没有视频数据，使用默认数据');
-                videos = [
-                    {
-                        id: 1,
-                        title: "示例视频 - Big Buck Bunny",
-                        description: "这是一个示例视频，用于演示平台功能",
-                        filename: "sample1.mp4",
-                        filepath: "https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/BigBuckBunny.mp4",
-                        videoUrl: "https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/BigBuckBunny.mp4",
-                        thumbnail_path: null,
-                        duration: 596,
-                        file_size: 1024000,
-                        uploaded_by: 1755168092284,
-                        uploader_name: "admin",
-                        created_at: "2024-01-01T00:00:00.000Z",
-                        updated_at: "2024-01-01T00:00:00.000Z"
-                    },
-                    {
-                        id: 2,
-                        title: "示例视频 - Elephants Dream",
-                        description: "另一个示例视频，展示平台功能",
-                        filename: "sample2.mp4",
-                        filepath: "https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ElephantsDream.mp4",
-                        videoUrl: "https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ElephantsDream.mp4",
-                        thumbnail_path: null,
-                        duration: 653,
-                        file_size: 1024000,
-                        uploaded_by: 1755168092284,
-                        uploader_name: "admin",
-                        created_at: "2024-01-01T00:00:00.000Z",
-                        updated_at: "2024-01-01T00:00:00.000Z"
-                    }
-                ];
+                if (!videos || videos.length === 0) {
+                    videos = [
+                        {
+                            id: 1,
+                            title: "示例视频 - Big Buck Bunny",
+                            description: "这是一个示例视频，用于演示平台功能",
+                            filename: "sample1.mp4",
+                            filepath: "https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/BigBuckBunny.mp4",
+                            videoUrl: "https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/BigBuckBunny.mp4",
+                            thumbnail_path: null,
+                            duration: 596,
+                            file_size: 1024000,
+                            uploaded_by: 1755168092284,
+                            uploader_name: "admin",
+                            created_at: "2024-01-01T00:00:00.000Z",
+                            updated_at: "2024-01-01T00:00:00.000Z"
+                        },
+                        {
+                            id: 2,
+                            title: "示例视频 - Elephants Dream",
+                            description: "另一个示例视频，展示平台功能",
+                            filename: "sample2.mp4",
+                            filepath: "https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ElephantsDream.mp4",
+                            videoUrl: "https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ElephantsDream.mp4",
+                            thumbnail_path: null,
+                            duration: 653,
+                            file_size: 1024000,
+                            uploaded_by: 1755168092284,
+                            uploader_name: "admin",
+                            created_at: "2024-01-01T00:00:00.000Z",
+                            updated_at: "2024-01-01T00:00:00.000Z"
+                        }
+                    ];
+                }
                 return false;
             }
         } else {
@@ -181,9 +204,24 @@ async function loadFromCloudDatabase() {
     }
 }
 
+// 保存数据到本地存储
+function saveToLocalStorage() {
+    try {
+        localStorage.setItem('localVideos', JSON.stringify(videos));
+        console.log('数据已保存到本地存储');
+        return true;
+    } catch (error) {
+        console.error('保存到本地存储失败:', error);
+        return false;
+    }
+}
+
 // 保存到云数据库
 async function saveToCloudDatabase() {
     console.log('开始保存到云数据库...');
+    
+    // 首先保存到本地存储
+    saveToLocalStorage();
     
     // 检查配置是否完整
     if (!JSONBIN_CONFIG.BIN_ID || !JSONBIN_CONFIG.API_KEY) {
@@ -203,7 +241,7 @@ async function saveToCloudDatabase() {
                 {
                     id: 1755168092284,
                     username: "admin",
-                    email: "admin@example.com",
+                    email: "1348155504@qq.com",
                     password_hash: "$2a$10$example",
                     is_admin: true,
                     created_at: "2024-01-01T00:00:00.000Z"
@@ -226,11 +264,21 @@ async function saveToCloudDatabase() {
         if (response.ok) {
             const result = await response.json();
             console.log('保存到云数据库成功:', result);
+            
+            // 同时保存到本地存储作为备份
+            localStorage.setItem('localVideos', JSON.stringify(videos));
+            console.log('数据已备份到本地存储');
+            
             return true;
         } else {
             console.error('保存到云数据库失败:', response.status, response.statusText);
             const errorText = await response.text();
             console.error('错误详情:', errorText);
+            
+            // 即使云数据库保存失败，也要保存到本地存储
+            localStorage.setItem('localVideos', JSON.stringify(videos));
+            console.log('数据已保存到本地存储作为备份');
+            
             return false;
         }
     } catch (error) {
@@ -244,6 +292,44 @@ function showSettingsModal() {
     const modal = document.getElementById('settingsModal');
     if (modal) {
         modal.style.display = 'block';
+        
+        // 显示当前配置
+        const binIdInput = document.getElementById('jsonbinBinId');
+        const apiKeyInput = document.getElementById('jsonbinApiKey');
+        
+        if (binIdInput && apiKeyInput) {
+            binIdInput.value = JSONBIN_CONFIG.BIN_ID || '';
+            apiKeyInput.value = JSONBIN_CONFIG.API_KEY || '';
+        }
+        
+        // 显示升级建议
+        showUpgradeNotice();
+    }
+}
+
+// 显示升级建议
+function showUpgradeNotice() {
+    const noticeContainer = document.getElementById('upgradeNotice');
+    if (noticeContainer) {
+        noticeContainer.innerHTML = `
+            <div class="upgrade-notice">
+                <h4><i class="fas fa-info-circle"></i> 关于 JSONBin.io 限制</h4>
+                <p><strong>免费版限制：</strong></p>
+                <ul>
+                    <li>每分钟最多 1000 次请求</li>
+                    <li>每天最多 10,000 次请求</li>
+                    <li>数据大小限制为 100KB</li>
+                </ul>
+                <p><strong>建议升级到专业版：</strong></p>
+                <ul>
+                    <li>每分钟 10,000 次请求</li>
+                    <li>每天 100,000 次请求</li>
+                    <li>数据大小限制为 1MB</li>
+                    <li>更好的稳定性</li>
+                </ul>
+                <p><a href="https://jsonbin.io/pricing" target="_blank" class="btn btn-primary">查看定价</a></p>
+            </div>
+        `;
     }
 }
 
@@ -1049,7 +1135,8 @@ async function handleUpload(e) {
         videos.push(newVideo);
         displayVideos(videos);
         
-        // 尝试保存到云数据库
+        // 保存数据
+        saveToLocalStorage(); // 立即保存到本地存储
         const saveSuccess = await saveToCloudDatabase();
         
         if (saveSuccess) {
@@ -1084,7 +1171,8 @@ async function deleteVideo(videoId) {
         // 从本地列表中删除
         videos = videos.filter(v => v.id != videoId);
         
-        // 保存到云数据库
+        // 保存数据
+        saveToLocalStorage(); // 立即保存到本地存储
         const saveSuccess = await saveToCloudDatabase();
         
         if (saveSuccess) {

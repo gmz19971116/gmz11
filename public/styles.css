@@ -5,6 +5,59 @@
     box-sizing: border-box;
 }
 
+/* 升级通知样式 */
+.upgrade-notice {
+    background: linear-gradient(135deg, #ffecd2 0%, #fcb69f 100%);
+    border: 1px solid #ffa726;
+    border-radius: 12px;
+    padding: 20px;
+    margin-top: 20px;
+    box-shadow: 0 4px 15px rgba(255, 167, 38, 0.2);
+}
+
+.upgrade-notice h4 {
+    color: #e65100;
+    margin-bottom: 15px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.upgrade-notice h4 i {
+    color: #ff9800;
+}
+
+.upgrade-notice p {
+    margin-bottom: 10px;
+    color: #333;
+}
+
+.upgrade-notice ul {
+    margin: 10px 0 15px 20px;
+    color: #555;
+}
+
+.upgrade-notice li {
+    margin-bottom: 5px;
+}
+
+.upgrade-notice .btn {
+    margin-top: 10px;
+    background: linear-gradient(135deg, #ff9800 0%, #f57c00 100%);
+    border: none;
+    color: white;
+    padding: 8px 16px;
+    border-radius: 6px;
+    text-decoration: none;
+    display: inline-block;
+    transition: all 0.3s ease;
+}
+
+.upgrade-notice .btn:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(255, 152, 0, 0.3);
+}
+
 body {
     font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
     background: linear-gradient(135deg, #667eea 0%, #764ba2 100%) !important;
